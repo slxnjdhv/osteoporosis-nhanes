@@ -1,10 +1,18 @@
 # Manuscript (LaTeX)
 
-`main.tex` contains the full paper (revision 8): title page and declarations, structured abstract,
+`main.tex` contains the full paper (revision 9): title page and declarations, structured abstract,
 Introduction, Methods, Results (Tables 1-5, Figures 1-4), Discussion, Conclusion, references, and
-Supplementary Methods, Supplementary Results, Tables S1-S28 (including the record of every analysis
+Supplementary Methods, Supplementary Results, Tables S1-S29 (including the record of every analysis
 version and the TRIPOD+AI checklist) and Figures S1-S4.
-Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v7_before_rev8.tex`.
+Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v8_before_rev9.tex`.
+
+Revision 9 changes: pooled IECV difference from OST declared the primary estimand (2017-2018
+reported as one fold, P values descriptive); three-way interpretation of gains (relevant / superior
+but uncertain relevance / equivalent); clinical-only model (no blood tests, race or income) in IECV;
+cases per 1,000 with random tie-breaking, in guideline strata, in the population not routinely
+screened and with survey weights (`src/rev9_analyses.py`, run after `rev8_analyses.py`); limitation
+that no untouched validation data exist (no 2021-2023 femur DXA release); new title; fixes to
+tuning-table values, captions, supplement headings and wording.
 
 Revision 8 changes: internal-external cross-validation with the penalty re-tuned inside each fold
 and Hartung-Knapp-Sidik-Jonkman CIs (`src/rev8_analyses.py`); equivalence margin applied to the full
