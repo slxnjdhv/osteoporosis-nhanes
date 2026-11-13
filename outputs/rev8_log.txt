@@ -1,0 +1,69 @@
+D {'AUROC_Full': np.float64(0.912), 'AUROC_No race': np.float64(0.906), 'AUROC_No race, income, education': np.float64(0.906), 'AUROC_Full (C fixed)': np.float64(0.917), 'AUROC_Age, weight, sex': np.float64(0.91), 'AUROC_OST': np.float64(0.9), 'AUROC_OST, sex-specific': np.float64(0.909), 'AUROC_SVM': np.float64(0.915), 'AUROC_LR-spline': np.float64(0.917), 'AUROC_XGBoost': np.float64(0.916), 'AUROC_LightGBM': np.float64(0.916), 'AUROC_CatBoost': np.float64(0.918), 'AUROC_RF': np.float64(0.915)}
+E {'AUROC_Full': np.float64(0.901), 'AUROC_No race': np.float64(0.904), 'AUROC_No race, income, education': np.float64(0.902), 'AUROC_Full (C fixed)': np.float64(0.9), 'AUROC_Age, weight, sex': np.float64(0.873), 'AUROC_OST': np.float64(0.867), 'AUROC_OST, sex-specific': np.float64(0.873), 'AUROC_SVM': np.float64(0.896), 'AUROC_LR-spline': np.float64(0.892), 'AUROC_XGBoost': np.float64(0.894), 'AUROC_LightGBM': np.float64(0.895), 'AUROC_CatBoost': np.float64(0.895), 'AUROC_RF': np.float64(0.891)}
+F {'AUROC_Full': np.float64(0.877), 'AUROC_No race': np.float64(0.873), 'AUROC_No race, income, education': np.float64(0.874), 'AUROC_Full (C fixed)': np.float64(0.878), 'AUROC_Age, weight, sex': np.float64(0.853), 'AUROC_OST': np.float64(0.858), 'AUROC_OST, sex-specific': np.float64(0.858), 'AUROC_SVM': np.float64(0.879), 'AUROC_LR-spline': np.float64(0.884), 'AUROC_XGBoost': np.float64(0.879), 'AUROC_LightGBM': np.float64(0.875), 'AUROC_CatBoost': np.float64(0.878), 'AUROC_RF': np.float64(0.853)}
+H {'AUROC_Full': np.float64(0.841), 'AUROC_No race': np.float64(0.83), 'AUROC_No race, income, education': np.float64(0.828), 'AUROC_Full (C fixed)': np.float64(0.841), 'AUROC_Age, weight, sex': np.float64(0.811), 'AUROC_OST': np.float64(0.808), 'AUROC_OST, sex-specific': np.float64(0.813), 'AUROC_SVM': np.float64(0.844), 'AUROC_LR-spline': np.float64(0.84), 'AUROC_XGBoost': np.float64(0.835), 'AUROC_LightGBM': np.float64(0.835), 'AUROC_CatBoost': np.float64(0.826), 'AUROC_RF': np.float64(0.811)}
+J {'AUROC_Full': np.float64(0.869), 'AUROC_No race': np.float64(0.864), 'AUROC_No race, income, education': np.float64(0.863), 'AUROC_Full (C fixed)': np.float64(0.869), 'AUROC_Age, weight, sex': np.float64(0.851), 'AUROC_OST': np.float64(0.841), 'AUROC_OST, sex-specific': np.float64(0.85), 'AUROC_SVM': np.float64(0.87), 'AUROC_LR-spline': np.float64(0.869), 'AUROC_XGBoost': np.float64(0.868), 'AUROC_LightGBM': np.float64(0.867), 'AUROC_CatBoost': np.float64(0.867), 'AUROC_RF': np.float64(0.862)}
+                                       comparison  pooled  dl_low  dl_high  hksj_low  hksj_high  hksj90_low  hksj90_high     I2
+                                   Full minus OST  0.0236  0.0136   0.0337    0.0094     0.0379      0.0127       0.0346 0.0000
+                      Full minus Age, weight, sex  0.0186  0.0082   0.0291    0.0038     0.0335      0.0072       0.0300 0.2869
+                     Full minus OST, sex-specific  0.0169  0.0080   0.0258    0.0044     0.0295      0.0073       0.0266 0.0104
+                                No race minus OST  0.0208  0.0112   0.0304    0.0072     0.0344      0.0104       0.0312 0.0638
+                   No race minus Age, weight, sex  0.0161  0.0042   0.0279   -0.0008     0.0329      0.0032       0.0290 0.5219
+             No race, income, education minus OST  0.0203  0.0111   0.0295    0.0072     0.0333      0.0103       0.0303 0.0000
+No race, income, education minus Age, weight, sex  0.0155  0.0042   0.0269   -0.0005     0.0316      0.0032       0.0279 0.5018
+                      OST, sex-specific minus OST  0.0064  0.0023   0.0105    0.0006     0.0122      0.0019       0.0108 0.0000
+                                   SVM minus Full  0.0002 -0.0037   0.0041   -0.0053     0.0057     -0.0040       0.0044 0.0000
+                             LR-spline minus Full -0.0001 -0.0058   0.0057   -0.0081     0.0080     -0.0063       0.0062 0.5600
+                               XGBoost minus Full -0.0025 -0.0081   0.0031   -0.0105     0.0055     -0.0086       0.0036 0.0000
+                              LightGBM minus Full -0.0027 -0.0085   0.0032   -0.0110     0.0056     -0.0090       0.0037 0.0000
+                              CatBoost minus Full -0.0022 -0.0090   0.0047   -0.0119     0.0076     -0.0096       0.0053 0.0000
+                                    RF minus Full -0.0132 -0.0244  -0.0020   -0.0292     0.0028     -0.0255      -0.0009 0.4605
+                                       AUROC_Full  0.8810  0.8574   0.9045    0.8473     0.9146      0.8552       0.9068 0.2221
+                                    AUROC_No race  0.8768  0.8502   0.9033    0.8386     0.9149      0.8475       0.9060 0.3723
+                 AUROC_No race, income, education  0.8759  0.8492   0.9027    0.8374     0.9144      0.8464       0.9055 0.3778
+                             AUROC_Full (C fixed)  0.8821  0.8572   0.9070    0.8464     0.9177      0.8547       0.9095 0.3110
+                           AUROC_Age, weight, sex  0.8607  0.8299   0.8915    0.8166     0.9048      0.8268       0.8946 0.4886
+                                        AUROC_OST  0.8556  0.8270   0.8841    0.8146     0.8965      0.8241       0.8870 0.3850
+                          AUROC_OST, sex-specific  0.8619  0.8320   0.8917    0.8191     0.9047      0.8290       0.8947 0.4579
+                                        AUROC_SVM  0.8816  0.8590   0.9041    0.8495     0.9137      0.8569       0.9063 0.1550
+                                  AUROC_LR-spline  0.8814  0.8577   0.9051    0.8476     0.9153      0.8554       0.9075 0.2338
+                                    AUROC_XGBoost  0.8793  0.8542   0.9045    0.8433     0.9154      0.8516       0.9070 0.3106
+                                   AUROC_LightGBM  0.8787  0.8531   0.9042    0.8420     0.9153      0.8505       0.9068 0.3301
+                                   AUROC_CatBoost  0.8784  0.8499   0.9069    0.8371     0.9197      0.8467       0.9101 0.4629
+                                         AUROC_RF  0.8675  0.8343   0.9007    0.8195     0.9155      0.8307       0.9044 0.5793
+                                                      0       1       2       3
+referred_pct                                      15.00   20.00   25.00   30.00
+cases_total                                      439.00  439.00  439.00  439.00
+cases_per_1000_total                              45.46   45.46   45.46   45.46
+per1000_Full                                      31.79   35.31   38.31   39.97
+sens_Full                                          0.70    0.78    0.84    0.88
+per1000_No race, income, education                31.48   35.00   37.28   39.25
+sens_No race, income, education                    0.69    0.77    0.82    0.86
+per1000_Age, weight, sex                          29.20   33.14   36.04   37.80
+sens_Age, weight, sex                              0.64    0.73    0.79    0.83
+per1000_OST, sex-specific                         29.41   33.55   36.14   38.00
+sens_OST, sex-specific                             0.65    0.74    0.79    0.84
+per1000_OST                                       29.41   32.52   35.31   37.38
+sens_OST                                           0.65    0.72    0.78    0.82
+full_minus_No race, income, education              0.31    0.31    1.04    0.72
+full_minus_No race, income, education_low         -0.83   -0.52    0.10   -0.21
+full_minus_No race, income, education_high         1.45    1.66    2.07    1.66
+full_minus_No race, income, education_relpct       0.99    0.89    2.78    1.85
+scans_per_extra_case_No race, income, education  482.85  643.80  241.43  413.87
+full_minus_Age, weight, sex                        2.59    2.17    2.28    2.17
+full_minus_Age, weight, sex_low                    0.72    0.52    0.72    0.93
+full_minus_Age, weight, sex_high                   4.04    3.83    3.62    3.52
+full_minus_Age, weight, sex_relpct                 8.87    6.56    6.32    5.75
+scans_per_extra_case_Age, weight, sex             57.94   91.97  109.74  137.96
+full_minus_OST, sex-specific                       2.38    1.76    2.17    1.97
+full_minus_OST, sex-specific_low                   0.62    0.10    0.72    0.83
+full_minus_OST, sex-specific_high                  4.14    3.31    3.62    3.21
+full_minus_OST, sex-specific_relpct                8.10    5.25    6.02    5.18
+scans_per_extra_case_OST, sex-specific            62.98  113.61  114.96  152.48
+full_minus_OST                                     2.38    2.80    3.00    2.59
+full_minus_OST_low                                 0.31    1.04    1.45    0.83
+full_minus_OST_high                                4.04    4.25    4.56    3.62
+full_minus_OST_relpct                              8.10    8.60    8.50    6.93
+scans_per_extra_case_OST                          62.98   71.53   83.25  115.88
+{'n_boot': 1000, 'AUROC_full_95': [0.8241646824663623, 0.9001652518622483], 'diff_vs_OST_95': [-0.00313475916400979, 0.051633685225806435], 'diff_vs_OST_90': [0.001399077070080751, 0.04740547670961384], 'diff_vs_LR3_95': [-0.011403430687755439, 0.03786028940396409], 'diff_vs_LR3_90': [-0.006245071318400552, 0.033349597667973595], 'p_diff_vs_OST_le0': 0.044, 'p_diff_vs_LR3_le0': 0.122}
+Done.

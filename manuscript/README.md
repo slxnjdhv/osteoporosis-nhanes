@@ -1,10 +1,18 @@
 # Manuscript (LaTeX)
 
-`main.tex` contains the full paper (revision 7): title page and declarations, structured abstract,
+`main.tex` contains the full paper (revision 8): title page and declarations, structured abstract,
 Introduction, Methods, Results (Tables 1-5, Figures 1-4), Discussion, Conclusion, references, and
-Supplementary Methods, Supplementary Results, Tables S1-S26 (including the record of every analysis
+Supplementary Methods, Supplementary Results, Tables S1-S28 (including the record of every analysis
 version and the TRIPOD+AI checklist) and Figures S1-S4.
-Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v6_before_rev7.tex`.
+Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v7_before_rev8.tex`.
+
+Revision 8 changes: internal-external cross-validation with the penalty re-tuned inside each fold
+and Hartung-Knapp-Sidik-Jonkman CIs (`src/rev8_analyses.py`); equivalence margin applied to the full
+model vs OST and vs age-weight-sex (not equivalent); cases per 1,000 from all 439 IECV cases, with
+relative gain and people screened per extra case; race/SES-free model; ML families in IECV; refit
+bootstrap with 1,000 replicates; penalty type, untuned stacking, citation and number fixes;
+supplementary items numbered in order of citation. Run `python src/rev8_analyses.py` after
+`python src/analysis.py` (about 2 hours).
 
 Revision 7 changes: main text shortened to about 3,800 words with 5 tables; internal-external
 cross-validation presented as the main evidence and the testing hierarchy labelled post hoc; secondary
