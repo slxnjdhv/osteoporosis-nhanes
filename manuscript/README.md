@@ -46,6 +46,6 @@ cd "/Users/sulaxan/Claude Work/Project 2/osteoporosis_nhanes/manuscript" && ~/.l
 Output: `main.pdf`.
 
 ## Before submission
-- Fill in the bracketed placeholders: authors, affiliations, funding, code link, contributions, word count.
+- Title-page details (author, affiliation, ORCID, funding, contributions, code link, word count) are filled in; check the funding statement and word count against the journal's requirements.
 - Journal of Medical Systems uses the Springer Nature LaTeX template (`sn-jnl`). Text, tables and
   `thebibliography` can be pasted into it unchanged; switch the reference style if the journal asks.
