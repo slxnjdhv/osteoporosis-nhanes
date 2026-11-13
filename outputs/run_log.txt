@@ -101,56 +101,62 @@ Train n=7649 events=343 (prev 0.045) | Temporal test n=2008 events=96 (prev 0.04
 [E] Optuna tuning of every model family (40 trials each) ...
   LR        none         default 0.876 tuned 0.879 {'C': 0.1345969096113918}
   LR-spline none         default 0.873 tuned 0.875 {'C': 1.9230037697425957}
-  SVM       class_weight default 0.841 tuned 0.876 {'C': 15.598643197521572, 'gamma': 0.0007543543732508429}
-  RF        class_weight default 0.861 tuned 0.862 {'n_estimators': 1000, 'max_depth': 15, 'min_samples_leaf': 13, 'max_features': 0.24340992321607555}
-  XGBoost   none         default 0.857 tuned 0.875 {'n_estimators': 1000, 'learning_rate': 0.01279520224957477, 'max_depth': 2, 'subsample': 0.6430437632265256, 'colsample_bytree': 0.7164500582064607, 'min_child_weight': 1.4345917184303447, 'reg_lambda': 1.052803991247384}
-  LightGBM  none         default 0.852 tuned 0.874 {'n_estimators': 600, 'learning_rate': 0.02031557137424409, 'num_leaves': 4, 'min_child_samples': 5, 'subsample': 0.6007683595575747, 'colsample_bytree': 0.5120495592428175, 'reg_lambda': 0.3963934107221813}
-  CatBoost  none         default 0.865 tuned 0.873 {'iterations': 600, 'depth': 4, 'learning_rate': 0.014629525034648495, 'l2_leaf_reg': 4.543499789984729}
-  Stacking (tuned base learners) 0.873
+  SVM       class_weight default 0.841 tuned 0.876 {'C': 1.0540196134359852, 'gamma': 0.003148208795259631}
+  RF        class_weight default 0.861 tuned 0.864 {'n_estimators': 700, 'max_depth': 12, 'min_samples_leaf': 27, 'max_features': 0.09343671401806844}
+  XGBoost   none         default 0.857 tuned 0.875 {'n_estimators': 1600, 'learning_rate': 0.02335084694769909, 'max_depth': 1, 'subsample': 0.7057727507071723, 'colsample_bytree': 0.647607164240368, 'min_child_weight': 1.4018170083893022, 'reg_lambda': 2.9049096616551}
+  LightGBM  none         default 0.852 tuned 0.875 {'n_estimators': 1300, 'learning_rate': 0.01646677271892616, 'num_leaves': 2, 'min_child_samples': 198, 'subsample': 0.8329591207973828, 'colsample_bytree': 0.6138863149214385, 'reg_lambda': 0.16797443072097734}
+  CatBoost  none         default 0.865 tuned 0.873 {'iterations': 600, 'depth': 4, 'learning_rate': 0.013469516530752443, 'l2_leaf_reg': 5.766917998736587}
+  Stacking (tuned base learners) 0.874
   -> selected: LR + none
 
 [F] Temporal validation and benchmarks ...
   internal AUROC 0.877 (0.857-0.896)
-  Proposed                                                   temporal AUROC 0.869 (0.831-0.903)
-  Proposed without race                                      temporal AUROC 0.863 (0.829-0.899)
-  Zhang et al. approach (Boruta + XGBoost, re-implemented)   temporal AUROC 0.855 (0.816-0.893)
-  LR: age, weight, sex                                       temporal AUROC 0.851 (0.811-0.890)
-  OST: 0.2 x (weight - age)                                  temporal AUROC 0.841 (0.794-0.883)
-  LR-spline (tuned)                                          temporal AUROC 0.869 (0.833-0.903)
-  SVM (tuned)                                                temporal AUROC 0.871 (0.834-0.905)
-  RF (tuned)                                                 temporal AUROC 0.862 (0.823-0.899)
-  XGBoost (tuned)                                            temporal AUROC 0.871 (0.833-0.904)
-  LightGBM (tuned)                                           temporal AUROC 0.876 (0.843-0.908)
-  CatBoost (tuned)                                           temporal AUROC 0.868 (0.830-0.903)
-  Stacking (tuned)                                           temporal AUROC 0.871 (0.832-0.907)
-                                              comparator  AUROC_proposed  AUROC_comparator  difference  diff_low  diff_high  boot_p  DeLong_p  p_holm
-                                   Proposed without race          0.8692            0.8635      0.0057   -0.0009     0.0125   0.092    0.0998   0.774
-Zhang et al. approach (Boruta + XGBoost, re-implemented)          0.8692            0.8549      0.0143   -0.0017     0.0308   0.086    0.1032   0.774
-                                    LR: age, weight, sex          0.8692            0.8513      0.0178   -0.0011     0.0422   0.062    0.0850   0.620
-                               OST: 0.2 x (weight - age)          0.8692            0.8412      0.0280    0.0063     0.0502   0.012    0.0175   0.132
-                                       LR-spline (tuned)          0.8692            0.8691      0.0001   -0.0084     0.0082   0.952    0.9871   1.000
-                                             SVM (tuned)          0.8692            0.8713     -0.0021   -0.0124     0.0089   0.696    0.7041   1.000
-                                              RF (tuned)          0.8692            0.8617      0.0075   -0.0127     0.0264   0.460    0.4441   1.000
-                                         XGBoost (tuned)          0.8692            0.8710     -0.0018   -0.0146     0.0114   0.732    0.7770   1.000
-                                        LightGBM (tuned)          0.8692            0.8763     -0.0071   -0.0215     0.0069   0.318    0.3286   1.000
-                                        CatBoost (tuned)          0.8692            0.8684      0.0008   -0.0125     0.0154   0.910    0.9158   1.000
-                                        Stacking (tuned)          0.8692            0.8710     -0.0019   -0.0129     0.0093   0.758    0.7540   1.000
+  Proposed                                                   temporal AUROC 0.869 (0.831-0.904)
+  Proposed without race                                      temporal AUROC 0.863 (0.825-0.898)
+  Zhang et al. approach (Boruta + XGBoost, re-implemented)   temporal AUROC 0.856 (0.820-0.892)
+  LR: age, weight, sex                                       temporal AUROC 0.851 (0.808-0.890)
+  OST: 0.2 x (weight - age)                                  temporal AUROC 0.841 (0.796-0.883)
+  ORAI                                                       temporal AUROC 0.791 (0.742-0.834)
+  SCORE                                                      temporal AUROC 0.841 (0.799-0.879)
+  LR-spline (tuned)                                          temporal AUROC 0.869 (0.832-0.903)
+  SVM (tuned)                                                temporal AUROC 0.870 (0.832-0.906)
+  RF (tuned)                                                 temporal AUROC 0.862 (0.823-0.900)
+  XGBoost (tuned)                                            temporal AUROC 0.868 (0.834-0.901)
+  LightGBM (tuned)                                           temporal AUROC 0.867 (0.832-0.902)
+  CatBoost (tuned)                                           temporal AUROC 0.867 (0.830-0.905)
+  Stacking (tuned)                                           temporal AUROC 0.872 (0.836-0.908)
+                                              comparator         family  AUROC_proposed  AUROC_comparator  difference  diff_low  diff_high  diff_low90  diff_high90  boot_p  DeLong_p  equivalent  p_holm
+                                   Proposed without race    sensitivity          0.8692            0.8635      0.0057   -0.0014     0.0123     -0.0005       0.0113   0.136    0.0998        True   0.136
+Zhang et al. approach (Boruta + XGBoost, re-implemented)      secondary          0.8692            0.8564      0.0128   -0.0067     0.0297     -0.0030       0.0270   0.184    0.1664       False   0.184
+                                    LR: age, weight, sex      secondary          0.8692            0.8513      0.0178   -0.0010     0.0391      0.0022       0.0357   0.070    0.0850       False   0.140
+                               OST: 0.2 x (weight - age)        primary          0.8692            0.8412      0.0280    0.0070     0.0521      0.0102       0.0483   0.014    0.0175       False   0.014
+                                                    ORAI      secondary          0.8692            0.7913      0.0779    0.0465     0.1149      0.0509       0.1090   0.001    0.0000       False   0.004
+                                                   SCORE      secondary          0.8692            0.8405      0.0287    0.0033     0.0547      0.0067       0.0510   0.028    0.0346       False   0.084
+                                       LR-spline (tuned) ml_equivalence          0.8692            0.8691      0.0001   -0.0091     0.0084     -0.0081       0.0072   0.942    0.9871        True   1.000
+                                             SVM (tuned) ml_equivalence          0.8692            0.8700     -0.0009   -0.0110     0.0108     -0.0096       0.0089   0.872    0.8736        True   1.000
+                                              RF (tuned) ml_equivalence          0.8692            0.8619      0.0073   -0.0101     0.0227     -0.0080       0.0204   0.396    0.3712       False   1.000
+                                         XGBoost (tuned) ml_equivalence          0.8692            0.8677      0.0015   -0.0127     0.0136     -0.0102       0.0119   0.876    0.8183        True   1.000
+                                        LightGBM (tuned) ml_equivalence          0.8692            0.8674      0.0018   -0.0117     0.0140     -0.0098       0.0121   0.830    0.7784        True   1.000
+                                        CatBoost (tuned) ml_equivalence          0.8692            0.8673      0.0019   -0.0145     0.0157     -0.0111       0.0127   0.862    0.7924        True   1.000
+                                        Stacking (tuned) ml_equivalence          0.8692            0.8723     -0.0032   -0.0143     0.0074     -0.0124       0.0058   0.506    0.5637        True   1.000
                                                    model  AUROC_weighted  Brier_weighted  Observed_weighted_pct  Predicted_weighted_pct  AUROC_weighted_low  AUROC_weighted_high  AUROC_nr_adjusted  AUROC_nr_adjusted_low  AUROC_nr_adjusted_high  Observed_nr_adjusted_pct  Predicted_nr_adjusted_pct  diff_nr_adjusted  diff_low  diff_high
-                                                Proposed           0.889           0.033                  4.158                   4.078               0.836                0.936              0.872                  0.805                   0.936                     4.153                      3.942               NaN       NaN        NaN
-                                   Proposed without race           0.887           0.033                  4.158                   3.842               0.835                0.935              0.871                  0.805                   0.932                     4.153                      3.749             0.001    -0.004      0.008
-Zhang et al. approach (Boruta + XGBoost, re-implemented)           0.876           0.033                  4.158                   3.780               0.811                0.930              0.859                  0.786                   0.926                     4.153                      3.748             0.013    -0.009      0.038
-                                    LR: age, weight, sex           0.870           0.034                  4.158                   3.671               0.820                0.917              0.856                  0.792                   0.920                     4.153                      3.543             0.016    -0.008      0.042
-                               OST: 0.2 x (weight - age)           0.868           0.035                  4.158                   3.485               0.817                0.914              0.849                  0.785                   0.914                     4.153                      3.383             0.023    -0.006      0.052
-                                       LR-spline (tuned)           0.881           0.033                  4.158                   4.272               0.818                0.938              0.866                  0.789                   0.934                     4.153                      4.189             0.006    -0.007      0.018
-                                             SVM (tuned)           0.884           0.032                  4.158                   4.205               0.829                0.931              0.873                  0.804                   0.933                     4.153                      4.047            -0.001    -0.014      0.014
-                                              RF (tuned)           0.876           0.033                  4.158                   3.835               0.810                0.936              0.866                  0.796                   0.936                     4.153                      3.741             0.006    -0.025      0.035
-                                         XGBoost (tuned)           0.890           0.032                  4.158                   3.944               0.833                0.942              0.876                  0.808                   0.944                     4.153                      3.887            -0.004    -0.019      0.011
-                                        LightGBM (tuned)           0.891           0.032                  4.158                   3.902               0.839                0.941              0.889                  0.838                   0.943                     4.153                      3.850            -0.017    -0.043      0.008
-                                        CatBoost (tuned)           0.886           0.032                  4.158                   3.887               0.821                0.941              0.878                  0.819                   0.938                     4.153                      3.841            -0.006    -0.033      0.018
-                                        Stacking (tuned)           0.891           0.033                  4.158                   3.859               0.837                0.942              0.874                  0.807                   0.938                     4.153                      3.752            -0.002    -0.013      0.012
+                                                Proposed           0.889           0.033                  4.158                   4.078               0.835                0.937              0.872                  0.812                   0.934                     4.153                      3.942               NaN       NaN        NaN
+                                   Proposed without race           0.887           0.033                  4.158                   3.842               0.833                0.933              0.871                  0.802                   0.933                     4.153                      3.749             0.001    -0.004      0.009
+Zhang et al. approach (Boruta + XGBoost, re-implemented)           0.872           0.033                  4.158                   3.799               0.809                0.929              0.860                  0.788                   0.927                     4.153                      3.765             0.012    -0.014      0.040
+                                    LR: age, weight, sex           0.870           0.034                  4.158                   3.671               0.822                0.917              0.856                  0.793                   0.912                     4.153                      3.543             0.016    -0.009      0.043
+                               OST: 0.2 x (weight - age)           0.868           0.035                  4.158                   3.485               0.816                0.914              0.849                  0.785                   0.913                     4.153                      3.383             0.023    -0.003      0.051
+                                                    ORAI           0.819           0.037                  4.158                   3.570               0.762                0.874              0.779                  0.688                   0.874                     4.153                      3.615             0.093     0.043      0.147
+                                                   SCORE           0.860           0.035                  4.158                   3.823               0.807                0.904              0.837                  0.762                   0.906                     4.153                      3.787             0.035     0.004      0.070
+                                       LR-spline (tuned)           0.881           0.033                  4.158                   4.272               0.819                0.935              0.866                  0.793                   0.934                     4.153                      4.189             0.006    -0.007      0.019
+                                             SVM (tuned)           0.885           0.032                  4.158                   4.095               0.830                0.935              0.873                  0.815                   0.937                     4.153                      3.955            -0.001    -0.015      0.018
+                                              RF (tuned)           0.877           0.033                  4.158                   3.989               0.810                0.936              0.870                  0.804                   0.934                     4.153                      3.862             0.002    -0.028      0.029
+                                         XGBoost (tuned)           0.883           0.032                  4.158                   4.010               0.824                0.938              0.871                  0.805                   0.941                     4.153                      3.965             0.001    -0.017      0.020
+                                        LightGBM (tuned)           0.885           0.032                  4.158                   3.934               0.820                0.938              0.874                  0.802                   0.941                     4.153                      3.861            -0.002    -0.021      0.017
+                                        CatBoost (tuned)           0.885           0.032                  4.158                   3.897               0.830                0.940              0.874                  0.812                   0.935                     4.153                      3.851            -0.002    -0.024      0.018
+                                        Stacking (tuned)           0.890           0.032                  4.158                   3.970               0.836                0.937              0.877                  0.812                   0.940                     4.153                      3.861            -0.005    -0.018      0.006
    sex    n  events  AUROC_Proposed  AUROC_LR3  AUROC_OST  diff_vs_OST  diff_low  diff_high  OST<2_sens  OST<2_spec  OST<2_referred_pct  OST<-1_sens  OST<-1_spec  OST<-1_referred_pct
-Female  858      72           0.853      0.834      0.834        0.019    -0.007      0.046       0.875       0.552              48.368        0.694        0.847               19.814
-  Male 1150      24           0.820      0.800      0.800        0.020    -0.029      0.067       0.833       0.689              32.174        0.500        0.896               11.217
+Female  858      72           0.853      0.834      0.834        0.019    -0.005      0.046       0.875       0.552              48.368        0.694        0.847               19.814
+  Male 1150      24           0.820      0.800      0.800        0.020    -0.031      0.068       0.833       0.689              32.174        0.500        0.896               11.217
                 operating_point  threshold  Sensitivity  Specificity   PPV   NPV  Referred_pct  Detected  Events
            Youden (development)      0.048        0.802        0.791 0.161 0.988        23.755        77      96
 Sensitivity 0.90 in development      0.023        0.896        0.632 0.109 0.992        39.293        86      96
@@ -165,39 +171,67 @@ Proposed at matched referral rate        -1.0        14.890        0.708        
 
 [G] Incremental value of predictor blocks ...
   Age, weight, sex                              k= 3 AUROC 0.851
-  + other body measures and socio-demographics  k= 8 AUROC 0.860
+  + other body measures and socio-demographics  k= 8 AUROC 0.858
   + clinical risk factors and history           k=21 AUROC 0.859
-  + laboratory tests                            k=31 AUROC 0.864
+  + laboratory tests                            k=31 AUROC 0.863
   + race/ethnicity                              k=35 AUROC 0.869
 
 [H] Subgroup / fairness analysis ...
                 model  threshold     group                   level    n  events  prevalence  mean_predicted  AUROC  AUROC_low  AUROC_high  Sensitivity  Sens_low  Sens_high  Specificity  Detected  Referred_pct  sex_threshold  Sensitivity_sex_thr  Specificity_sex_thr  Detected_sex_thr  Referred_pct_sex_thr
-             Proposed      0.048       sex                  Female  858      72       0.084           0.072  0.853      0.805       0.896        0.847     0.756      0.929        0.669        61        37.413          0.067                0.819                0.754              59.0                29.371
-             Proposed      0.048       sex                    Male 1150      24       0.021           0.024  0.820      0.729       0.898        0.667     0.476      0.842        0.876        16        13.565          0.035                0.750                0.833              18.0                17.913
-             Proposed      0.048 age_group                   50-64 1157      32       0.028           0.027  0.861      0.792       0.925        0.656     0.481      0.839        0.864        21        15.039            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048 age_group                   65-79  651      35       0.054           0.050  0.855      0.786       0.912        0.829     0.697      0.941        0.752        29        27.957            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048 age_group                     80+  200      29       0.145           0.129  0.793      0.693       0.877        0.931     0.826      1.000        0.450        27        60.500            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2        Mexican American  231       8       0.035           0.027  0.816      0.684       0.949        0.500     0.142      0.889        0.883         4        12.987            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2                NH Asian  275      20       0.073           0.060  0.904      0.840       0.955        0.900     0.760      1.000        0.698        18        34.545            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2                NH Black  485       7       0.014           0.021  0.782      0.568       0.938        0.571     0.198      1.000        0.874         4        13.196            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2                NH White  718      51       0.071           0.063  0.851      0.795       0.896        0.824     0.706      0.920        0.736        42        30.362            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2          Other Hispanic  217       6       0.028           0.038  0.963      0.934       0.986        1.000     1.000      1.000        0.806         6        21.659            NaN                  NaN                  NaN               NaN                   NaN
-             Proposed      0.048     race2 Other/Multi (non-Asian)   82       4       0.049           0.039  0.821      0.429       0.990        0.750     0.000      1.000        0.744         3        28.049            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052       sex                  Female  858      72       0.084           0.073  0.847      0.797       0.888        0.847     0.759      0.920        0.672        61        37.179            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052       sex                    Male 1150      24       0.021           0.025  0.816      0.719       0.898        0.625     0.421      0.813        0.885        15        12.522            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052 age_group                   50-64 1157      32       0.028           0.027  0.849      0.771       0.914        0.625     0.444      0.790        0.877        20        13.656            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052 age_group                   65-79  651      35       0.054           0.052  0.847      0.779       0.905        0.829     0.686      0.947        0.740        29        29.032            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052 age_group                     80+  200      29       0.145           0.130  0.800      0.708       0.881        0.931     0.829      1.000        0.480        27        58.000            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2        Mexican American  231       8       0.035           0.037  0.803      0.637       0.952        0.625     0.250      1.000        0.816         5        19.913            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2                NH Asian  275      20       0.073           0.058  0.904      0.837       0.959        0.850     0.667      1.000        0.741        17        30.182            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2                NH Black  485       7       0.014           0.032  0.776      0.530       0.943        0.571     0.167      1.000        0.824         4        18.144            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2                NH White  718      51       0.071           0.055  0.855      0.798       0.900        0.804     0.684      0.905        0.787        41        25.487            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2          Other Hispanic  217       6       0.028           0.038  0.957      0.922       0.983        1.000     1.000      1.000        0.834         6        18.894            NaN                  NaN                  NaN               NaN                   NaN
-Proposed without race      0.052     race2 Other/Multi (non-Asian)   82       4       0.049           0.038  0.814      0.514       0.976        0.750     0.000      1.000        0.756         3        26.829            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048       sex                  Female  858      72       0.084           0.072  0.853      0.811       0.894        0.847     0.754      0.922        0.669        61        37.413          0.067                0.819                0.754              59.0                29.371
+             Proposed      0.048       sex                    Male 1150      24       0.021           0.024  0.820      0.733       0.899        0.667     0.468      0.850        0.876        16        13.565          0.035                0.750                0.833              18.0                17.913
+             Proposed      0.048 age_group                   50-64 1157      32       0.028           0.027  0.861      0.790       0.924        0.656     0.500      0.818        0.864        21        15.039            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048 age_group                   65-79  651      35       0.054           0.050  0.855      0.787       0.912        0.829     0.696      0.944        0.752        29        27.957            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048 age_group                     80+  200      29       0.145           0.129  0.793      0.696       0.882        0.931     0.833      1.000        0.450        27        60.500            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2        Mexican American  231       8       0.035           0.027  0.816      0.674       0.956        0.500     0.143      0.889        0.883         4        12.987            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2                NH Asian  275      20       0.073           0.060  0.904      0.840       0.953        0.900     0.750      1.000        0.698        18        34.545            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2                NH Black  485       7       0.014           0.021  0.782      0.570       0.930        0.571     0.143      1.000        0.874         4        13.196            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2                NH White  718      51       0.071           0.063  0.851      0.799       0.897        0.824     0.717      0.917        0.736        42        30.362            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2          Other Hispanic  217       6       0.028           0.038  0.963      0.930       0.987        1.000     1.000      1.000        0.806         6        21.659            NaN                  NaN                  NaN               NaN                   NaN
+             Proposed      0.048     race2 Other/Multi (non-Asian)   82       4       0.049           0.039  0.821      0.450       0.988        0.750     0.000      1.000        0.744         3        28.049            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052       sex                  Female  858      72       0.084           0.073  0.847      0.802       0.888        0.847     0.757      0.923        0.672        61        37.179            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052       sex                    Male 1150      24       0.021           0.025  0.816      0.723       0.897        0.625     0.417      0.815        0.885        15        12.522            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052 age_group                   50-64 1157      32       0.028           0.027  0.849      0.774       0.914        0.625     0.461      0.793        0.877        20        13.656            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052 age_group                   65-79  651      35       0.054           0.052  0.847      0.781       0.906        0.829     0.696      0.944        0.740        29        29.032            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052 age_group                     80+  200      29       0.145           0.130  0.800      0.706       0.882        0.931     0.833      1.000        0.480        27        58.000            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2        Mexican American  231       8       0.035           0.037  0.803      0.643       0.955        0.625     0.285      1.000        0.816         5        19.913            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2                NH Asian  275      20       0.073           0.058  0.904      0.837       0.955        0.850     0.667      1.000        0.741        17        30.182            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2                NH Black  485       7       0.014           0.032  0.776      0.533       0.937        0.571     0.143      1.000        0.824         4        18.144            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2                NH White  718      51       0.071           0.055  0.855      0.803       0.899        0.804     0.687      0.906        0.787        41        25.487            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2          Other Hispanic  217       6       0.028           0.038  0.957      0.919       0.984        1.000     1.000      1.000        0.834         6        18.894            NaN                  NaN                  NaN               NaN                   NaN
+Proposed without race      0.052     race2 Other/Multi (non-Asian)   82       4       0.049           0.038  0.814      0.458       0.975        0.750     0.000      1.000        0.756         3        26.829            NaN                  NaN                  NaN               NaN                   NaN
+
+[H2] Clinical strata ...
+          stratum    n  events  AUROC_Full  AUROC_LR3  AUROC_OST  AUROC_ORAI  AUROC_SCORE  diff_vs_OST  diff_vs_OST_low  diff_vs_OST_high  diff_vs_LR3  diff_vs_LR3_low  diff_vs_LR3_high  Full_sens  Full_referred_pct  Full_detected  OST<2_sens  OST<2_referred_pct  OST<2_detected
+Women 50-64 years  547      27       0.818      0.804      0.804       0.749        0.838        0.014           -0.030             0.065        0.014           -0.030             0.066      0.667             27.422             18       0.778              35.466              21
+  Women 65+ years  311      45       0.836      0.811      0.811       0.783        0.807        0.025           -0.019             0.068        0.025           -0.019             0.068      0.956             54.984             43       0.933              71.061              42
+  Men 50-69 years  787       9       0.813      0.733      0.734       0.787        0.751        0.080            0.013             0.152        0.080            0.013             0.154      0.667              5.845              6       0.667              19.441               6
+    Men 70+ years  363      15       0.741      0.732      0.733       0.629        0.756        0.008           -0.074             0.100        0.010           -0.072             0.102      0.667             30.303             10       0.933              59.780              14
+        All women  858      72       0.853      0.834      0.834       0.802        0.843        0.019           -0.005             0.046        0.019           -0.005             0.047      0.847             37.413             61       0.875              48.368              63
+          All men 1150      24       0.820      0.800      0.800       0.778        0.806        0.020           -0.031             0.068        0.021           -0.030             0.069      0.667             13.565             16       0.833              32.174              20
+
+[H3] Internal-external cross-validation by cycle ...
+  D: n=1422 ev=65 AUROC full 0.917 OST 0.900 LR3 0.910
+  E: n=2090 ev=84 AUROC full 0.900 OST 0.867 LR3 0.873
+  F: n=2164 ev=100 AUROC full 0.878 OST 0.858 LR3 0.853
+  H: n=1973 ev=94 AUROC full 0.841 OST 0.808 LR3 0.811
+  J: n=2008 ev=96 AUROC full 0.869 OST 0.841 LR3 0.851
+      comparison  pooled    low   high   tau2     I2  pi_low  pi_high
+Full model - OST  0.0246 0.0147 0.0345 0.0000 0.0000  0.0086   0.0406
+Full model - LR3  0.0190 0.0105 0.0275 0.0000 0.0341  0.0040   0.0340
+      AUROC_full  0.8821 0.8572 0.9070 0.0003 0.3110  0.8175   0.9467
+       AUROC_LR3  0.8607 0.8299 0.8915 0.0006 0.4886  0.7680   0.9534
+       AUROC_OST  0.8556 0.8270 0.8841 0.0004 0.3850  0.7764   0.9348
+
+[H4] Refit bootstrap (development + validation resampling) ...
+{'n_boot': 200, 'AUROC_full': [0.8244287629144113, 0.8988595093240113], 'diff_vs_OST': [-0.00415728026880062, 0.05175157491105453], 'diff_vs_LR3': [-0.011056329418493414, 0.03577762929256837], 'p_diff_vs_OST_le0': 0.045}
 
 [I] SHAP and short form ...
+   sex    n  events  AUROC_short  AUROC_full  AUROC_LR3  AUROC_OST  short_sens  short_referred_pct
+Female  858      72        0.835       0.853      0.834      0.834       0.889              43.590
+  Male 1150      24        0.800       0.820      0.800      0.800       0.583              15.652
   short-form: ['weight', 'postmenopausal', 'age', 'height', 'waist', 'hormone_use', 'prior_fracture', 'arthritis', 'cancer', 'stroke']
-  AUROC 0.852 (0.812-0.891) (vs full p=0.0240; vs OST p=0.2500; vs LR3 p=0.9840)
+  AUROC 0.852 (0.810-0.887) (vs full p=0.0180; vs OST p=0.2340; vs LR3 p=0.9660)
 
 [K] Sensitivity analyses ...
                                               analysis                model  dev_prev_pct  val_prev_pct  AUROC  calib_slope
@@ -215,6 +249,75 @@ Proposed without race      0.052     race2 Other/Multi (non-Asian)   82       4 
 Including previously diagnosed or treated participants             Proposed         6.417         7.130  0.859        0.967
 Including previously diagnosed or treated participants                  OST         6.417         7.130  0.824        0.887
 Including previously diagnosed or treated participants LR: age, weight, sex         6.417         7.130  0.839        0.945
+
+[J] Additional analyses ...
+                model  AUROC  AUROC_low  AUROC_high  Detected  Referred_pct  diff_vs_OSTsex  diff_low  diff_high  boot_p
+           Full model  0.869      0.831       0.904        77        23.755           0.019    -0.000      0.041   0.060
+Age, weight, sex (LR)  0.851      0.808       0.890        75        24.402           0.001    -0.002      0.005   0.590
+    OST, sex-specific  0.850      0.806       0.890        76        25.299             NaN       NaN        NaN     NaN
+                  OST  0.841      0.796       0.883        79        30.926          -0.009    -0.017     -0.002   0.008
+                 ORAI  0.791      0.742       0.834        72        28.785          -0.059    -0.090     -0.032   0.001
+                SCORE  0.841      0.799       0.879        80        30.179          -0.010    -0.034      0.016   0.400
+                                             0      1
+sex                                      Women    Men
+n                                          858   1150
+cases                                       72     24
+AUROC_Full model                         0.853   0.82
+AUROC_Age, weight, sex (LR)              0.834    0.8
+AUROC_OST, sex-specific                  0.834    0.8
+AUROC_OST                                0.834    0.8
+AUROC_ORAI                               0.802  0.778
+AUROC_SCORE                              0.843  0.806
+diff_full_vs_ORAI                        0.051  0.042
+diff_full_vs_ORAI_low                    0.021 -0.027
+diff_full_vs_ORAI_high                   0.086   0.12
+diff_full_vs_SCORE                        0.01  0.014
+diff_full_vs_SCORE_low                   -0.02 -0.038
+diff_full_vs_SCORE_high                  0.042  0.068
+diff_full_vs_OST                         0.019   0.02
+diff_full_vs_OST_low                    -0.005 -0.031
+diff_full_vs_OST_high                    0.046  0.068
+diff_full_vs_Age, weight, sex (LR)       0.019  0.021
+diff_full_vs_Age, weight, sex (LR)_low  -0.005  -0.03
+diff_full_vs_Age, weight, sex (LR)_high  0.047  0.069
+                                           0       1       2       3
+referred_pct                           15.00   20.00   25.00   30.00
+dxa_per_1000                          150.00  200.00  250.00  300.00
+cases_per_1000_Full model              33.86   36.85   39.34   41.33
+sensitivity_Full model                  0.71    0.77    0.82    0.86
+cases_per_1000_Age, weight, sex (LR)   32.37   35.86   37.85   38.84
+sensitivity_Age, weight, sex (LR)       0.68    0.75    0.79    0.81
+cases_per_1000_OST, sex-specific       32.87   35.86   37.35   38.84
+sensitivity_OST, sex-specific           0.69    0.75    0.78    0.81
+cases_per_1000_OST                     30.88   34.86   37.35   39.34
+sensitivity_OST                         0.65    0.73    0.78    0.82
+cases_per_1000_ORAI                    23.90   24.90   31.87   36.85
+sensitivity_ORAI                        0.50    0.52    0.67    0.77
+cases_per_1000_SCORE                   27.39   31.87   37.35   39.84
+sensitivity_SCORE                       0.57    0.67    0.78    0.83
+diff_vs_OST                             2.99    1.99    1.99    1.99
+diff_vs_OST_low                        -1.49   -1.49   -1.00   -0.50
+diff_vs_OST_high                        6.47    4.98    4.48    3.98
+diff_vs_Age, weight, sex (LR)           1.49    1.00    1.49    2.49
+diff_vs_Age, weight, sex (LR)_low      -3.49   -2.49   -0.50   -0.50
+diff_vs_Age, weight, sex (LR)_high      4.48    3.98    3.98    4.98
+diff_vs_OST, sex-specific               1.00    1.00    1.99    2.49
+diff_vs_OST, sex-specific_low          -3.49   -2.49   -1.00    0.00
+diff_vs_OST, sex-specific_high          4.98    3.98    3.98    4.98
+{'inflation_min': 1.0492588217315648, 'inflation_median': 1.1692802976139292, 'inflation_p99': 3.8456868847704797, 'inflation_max': 32.501190864713195, 'n_inflation_gt5': 18, 'n_inflation_gt10': 11, 'normalised_weight_quantiles': {'q1': 0.13388965132362812, 'q50': 0.49783914992733524, 'q99': 6.673886002114986}, 'normalised_weight_max': 10.116986616313868, 'kish_deff_wmec': 2.8725319191854117, 'kish_deff_wadj': 2.8398187408824196}
+                               weights  obs_prev_pct  pred_prev_full_pct  AUROC_Full model  AUROC_Age, weight, sex (LR)  AUROC_OST  diff_full_vs_OST
+                    Examination weight         4.158               4.078             0.889                        0.870      0.868             0.020
+                 Non-response adjusted         4.153               3.942             0.872                        0.856      0.849             0.023
+  Adjusted, trimmed at 99th percentile         4.220               3.983             0.871                        0.855      0.848             0.023
+       Adjusted, trimmed at 5 x median         4.671               4.355             0.870                        0.851      0.845             0.025
+Adjusted, inflation factor capped at 3         4.121               4.013             0.888                        0.869      0.867             0.021
+                                analysis                 model  dev_prev_pct  val_prev_pct  AUROC  calib_slope
+Pre-2013 hip T-scores lowered by 0.15 SD            Full model         5.543         4.781  0.871        1.015
+Pre-2013 hip T-scores lowered by 0.15 SD Age, weight, sex (LR)         5.543         4.781  0.851        1.077
+Pre-2013 hip T-scores lowered by 0.15 SD                   OST         5.543         4.781  0.841        1.018
+    2013+ hip T-scores raised by 0.15 SD            Full model         4.144         3.536  0.885        1.070
+    2013+ hip T-scores raised by 0.15 SD Age, weight, sex (LR)         4.144         3.536  0.859        1.067
+    2013+ hip T-scores raised by 0.15 SD                   OST         4.144         3.536  0.849        1.000
 
 Done. Tables -> /Users/sulaxan/Claude Work/Project 2/osteoporosis_nhanes/outputs/tables
       Figures -> /Users/sulaxan/Claude Work/Project 2/osteoporosis_nhanes/outputs/figures

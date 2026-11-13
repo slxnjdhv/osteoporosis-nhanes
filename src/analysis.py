@@ -61,7 +61,8 @@ from config import CYCLES as CYCLES_YEARS
 from config import (BINARY_FEATURES, CV_FOLDS, CV_FOLDS_BASELINE, DATASET_CSV, FEATURES,
                     FIG_DIR, INCREMENTAL_BLOCKS, LAB_FEATURES, N_BOOT, N_JOBS, NUMERIC_FEATURES,
                     OPTUNA_TRIALS, PRIMARY_OUTCOME, PROC_DIR, PRETTY, RACE_FEATURES, SEED,
-                    SENSITIVITY_OUTCOMES, SHORT_FORM_K, TABLE_DIR, TEST_CYCLES, TRAIN_CYCLES)
+                    SENSITIVITY_OUTCOMES, SHORT_FORM_K, T_SCORE_CUTOFF, TABLE_DIR, TEST_CYCLES,
+                    TRAIN_CYCLES)
 
 warnings.filterwarnings("ignore")
 optuna.logging.set_verbosity(optuna.logging.WARNING)
@@ -699,6 +700,8 @@ def main():
     def family(name):
         if name == OST_NAME:
             return "primary"
+        if name == "Proposed without race":
+            return "sensitivity"   # a variant of the full model, not a competing tool: no adjustment
         return "ml_equivalence" if name.endswith("(tuned)") else "secondary"
     dl = []
     for name, r in M.items():
@@ -865,7 +868,7 @@ def main():
     json.dump({"axis_limit": lim, "share_above_limit": float((p_te > lim).mean())},
               open(TABLE_DIR / "calibration_plot_info.json", "w"))
 
-    ts = np.linspace(0.01, 0.40, 40)
+    ts = np.round(np.arange(0.02, 0.1501, 0.005), 3)   # plausible DXA-referral thresholds
     prev = y_te.mean()
     fig, ax = plt.subplots(figsize=(6.2, 4.6))
     for name in show:
@@ -1199,6 +1202,118 @@ def main():
     sens = pd.DataFrame(rows)
     sens.to_csv(TABLE_DIR / "table9_sensitivity_analyses.csv", index=False)
     print(sens.round(3).to_string(index=False))
+
+    # ---- J. Sex-specific OST, tools by sex, cases per 1,000, weight trimming, scanner shift
+    print("\n[J] Additional analyses ...")
+    fem_tr, fem_te = train["female"].fillna(0).values, test["female"].fillna(0).values
+    o_tr, o_te = ost_score(train), ost_score(test)
+
+    def ost_sex_fit(o_d, f_d, y_d, o_v, f_v):
+        Xd = np.column_stack([o_d, f_d, o_d * f_d]); Xv = np.column_stack([o_v, f_v, o_v * f_v])
+        lr_ = LogisticRegression(C=1e6, max_iter=1000).fit(Xd, y_d)
+        pd_ = lr_.predict_proba(Xd)[:, 1]
+        return {"oof": pd_, "thr": youden_threshold(y_d, pd_), "p": lr_.predict_proba(Xv)[:, 1],
+                "coef": lr_.coef_[0].tolist(), "intercept": float(lr_.intercept_[0])}
+    M_ostsex = ost_sex_fit(o_tr, fem_tr, y_tr, o_te, fem_te)
+    tools = {"Full model": M["Proposed"], "Age, weight, sex (LR)": M[LR3_NAME], "OST, sex-specific": M_ostsex,
+             "OST": M[OST_NAME], "ORAI": M[ORAI_NAME], "SCORE": M[SCORE_NAME]}
+    rows_j = []
+    for nm, rr in tools.items():
+        bm = bootstrap_metrics(y_te, rr["p"], rr["thr"], calib=False).set_index("metric")
+        r_ = {"model": nm, "AUROC": bm.loc["AUROC", "estimate"], "AUROC_low": bm.loc["AUROC", "ci_low"],
+              "AUROC_high": bm.loc["AUROC", "ci_high"], "Detected": int(bm.loc["Detected", "estimate"]),
+              "Referred_pct": bm.loc["Referred_pct", "estimate"]}
+        if nm != "OST, sex-specific":
+            d_, lo_, hi_, pv_ = boot_auc_diff(y_te, rr["p"], M_ostsex["p"], return_p=True)
+            r_.update({"diff_vs_OSTsex": d_, "diff_low": lo_, "diff_high": hi_, "boot_p": pv_})
+        rows_j.append(r_)
+    pd.DataFrame(rows_j).to_csv(TABLE_DIR / "table10_sex_specific_ost.csv", index=False)
+    json.dump({"intercept": M_ostsex["intercept"], "coef_ost_female_interaction": M_ostsex["coef"]},
+              open(TABLE_DIR / "ost_sex_specific_model.json", "w"), indent=1)
+
+    rows_s = []
+    for sx, lab_ in [(1, "Women"), (0, "Men")]:
+        mk = fem_te == sx; yy = y_te[mk]
+        r_ = {"sex": lab_, "n": int(mk.sum()), "cases": int(yy.sum())}
+        for nm, rr in tools.items():
+            r_[f"AUROC_{nm}"] = roc_auc_score(yy, rr["p"][mk])
+        for nm in ["ORAI", "SCORE", "OST", "Age, weight, sex (LR)"]:
+            d_, lo_, hi_ = boot_auc_diff(yy, tools["Full model"]["p"][mk], tools[nm]["p"][mk])
+            r_.update({f"diff_full_vs_{nm}": d_, f"diff_full_vs_{nm}_low": lo_, f"diff_full_vs_{nm}_high": hi_})
+        rows_s.append(r_)
+    pd.DataFrame(rows_s).to_csv(TABLE_DIR / "table10b_tools_by_sex.csv", index=False)
+
+    # cases detected per 1,000 screened when a fixed share is referred for DXA (top-ranked by each tool)
+    def detected_at(yv, pv, q):
+        k = int(round(q * len(yv)))
+        order = np.argsort(-pv, kind="stable")
+        return yv[order[:k]].sum()
+    rates = [0.15, 0.20, 0.25, 0.30]
+    rng_j = np.random.default_rng(SEED)
+    idx_b = [rng_j.integers(0, len(y_te), len(y_te)) for _ in range(N_BOOT)]
+    rows_c = []
+    for q in rates:
+        r_ = {"referred_pct": q * 100, "dxa_per_1000": q * 1000}
+        for nm, rr in tools.items():
+            det = detected_at(y_te, rr["p"], q)
+            r_[f"cases_per_1000_{nm}"] = det / len(y_te) * 1000
+            r_[f"sensitivity_{nm}"] = det / y_te.sum()
+        for nm in ["OST", "Age, weight, sex (LR)", "OST, sex-specific"]:
+            bd = [(detected_at(y_te[i], tools["Full model"]["p"][i], q) - detected_at(y_te[i], tools[nm]["p"][i], q))
+                  / len(i) * 1000 for i in idx_b]
+            r_.update({f"diff_vs_{nm}": r_[f"cases_per_1000_Full model"] - r_[f"cases_per_1000_{nm}"],
+                       f"diff_vs_{nm}_low": float(np.quantile(bd, 0.025)),
+                       f"diff_vs_{nm}_high": float(np.quantile(bd, 0.975))})
+        rows_c.append(r_)
+    pd.DataFrame(rows_c).to_csv(TABLE_DIR / "table10c_cases_per_1000.csv", index=False)
+
+    # distribution of non-response-adjusted weights and trimmed-weight sensitivity analysis
+    infl = 1 / p_resp
+    wq = {f"q{int(q*100)}": float(np.quantile(w_adj / np.mean(w_adj), q)) for q in (0.01, 0.5, 0.99)}
+    wd = {"inflation_min": float(infl.min()), "inflation_median": float(np.median(infl)),
+          "inflation_p99": float(np.quantile(infl, 0.99)), "inflation_max": float(infl.max()),
+          "n_inflation_gt5": int((infl > 5).sum()), "n_inflation_gt10": int((infl > 10).sum()),
+          "normalised_weight_quantiles": wq, "normalised_weight_max": float((w_adj / np.mean(w_adj)).max()),
+          "kish_deff_wmec": float(len(test) * np.sum(test.wt_mec ** 2) / np.sum(test.wt_mec) ** 2),
+          "kish_deff_wadj": float(len(w_adj) * np.sum(w_adj ** 2) / np.sum(w_adj) ** 2)}
+    json.dump(wd, open(TABLE_DIR / "weight_distribution.json", "w"), indent=1)
+    rows_w = []
+    for lab_, ww in [("Examination weight", test.wt_mec.values), ("Non-response adjusted", w_adj),
+                     ("Adjusted, trimmed at 99th percentile", np.minimum(w_adj, np.quantile(w_adj, 0.99))),
+                     ("Adjusted, trimmed at 5 x median", np.minimum(w_adj, 5 * np.median(w_adj))),
+                     ("Adjusted, inflation factor capped at 3", test.wt_mec.values * np.minimum(infl, 3))]:
+        r_ = {"weights": lab_, "obs_prev_pct": np.average(y_te, weights=ww) * 100,
+              "pred_prev_full_pct": np.average(p_te, weights=ww) * 100}
+        for nm in ["Full model", "Age, weight, sex (LR)", "OST"]:
+            r_[f"AUROC_{nm}"] = roc_auc_score(y_te, tools[nm]["p"], sample_weight=ww)
+        r_["diff_full_vs_OST"] = r_["AUROC_Full model"] - r_["AUROC_OST"]
+        rows_w.append(r_)
+    pd.DataFrame(rows_w).to_csv(TABLE_DIR / "table10d_weight_trimming.csv", index=False)
+
+    # scanner change (QDR-4500A to Discovery after 2009-2010): shift hip T-scores by 0.15 SD
+    rows_x = []
+    for lab_, sh_old, sh_new in [("Pre-2013 hip T-scores lowered by 0.15 SD", -0.15, 0.0),
+                                 ("2013+ hip T-scores raised by 0.15 SD", 0.0, 0.15)]:
+        def y_shift(d):
+            sh = np.where(d.cycle.isin(["D", "E", "F"]), sh_old, sh_new)
+            return (((d.fn_t + sh) <= T_SCORE_CUTOFF) | ((d.th_t + sh) <= T_SCORE_CUTOFF)).astype(int).values
+        yd_s, yv_s = y_shift(train), y_shift(test)
+        for nm, rr in [("Full model", develop(feats, best_model, best_strategy, best_params, y_dev=yd_s)),
+                       ("Age, weight, sex (LR)", develop(["age", "weight", "female"], "LR", "none", {}, y_dev=yd_s)),
+                       ("OST", score_model(-ost_score(train), -ost_score(test), y_dev=yd_s))]:
+            rows_x.append({"analysis": lab_, "model": nm, "dev_prev_pct": yd_s.mean() * 100,
+                           "val_prev_pct": yv_s.mean() * 100, "AUROC": roc_auc_score(yv_s, rr["p"]),
+                           "calib_slope": calibration_slope_intercept(yv_s, rr["p"])[0]})
+    pd.DataFrame(rows_x).to_csv(TABLE_DIR / "table10e_scanner_shift.csv", index=False)
+
+    d_, lo_, hi_ = boot_auc_diff(y_te, p_te, sf["p"])
+    json.dump({"diff_full_minus_short": d_, "low": lo_, "high": hi_},
+              open(TABLE_DIR / "short_form_vs_full_ci.json", "w"), indent=1)
+    print(pd.DataFrame(rows_j).round(3).to_string(index=False))
+    print(pd.DataFrame(rows_s).round(3).T.to_string())
+    print(pd.DataFrame(rows_c).round(2).T.to_string())
+    print(wd); print(pd.DataFrame(rows_w).round(3).to_string(index=False))
+    print(pd.DataFrame(rows_x).round(3).to_string(index=False))
     print(f"\nDone. Tables -> {TABLE_DIR}\n      Figures -> {FIG_DIR}")
 
 

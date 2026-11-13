@@ -1,11 +1,18 @@
 # Manuscript (LaTeX)
 
-`main.tex` contains the full paper (revision 6): title page and declarations, structured abstract,
-Introduction, Methods, Results (Tables 1-9, Figures 1-5), Discussion (including Implementation
-considerations), Conclusion, references, and supplementary Tables S1-S17 (including the record of
-every analysis version and the TRIPOD+AI checklist) and Figures S1-S3.
-Earlier versions are kept as `main_v1_before_fixes.tex`, `main_v2_before_rev3.tex`,
-`main_v3_before_rev4.tex`, `main_v4_before_rev5.tex` and `main_v5_before_rev6.tex`.
+`main.tex` contains the full paper (revision 7): title page and declarations, structured abstract,
+Introduction, Methods, Results (Tables 1-5, Figures 1-4), Discussion, Conclusion, references, and
+Supplementary Methods, Supplementary Results, Tables S1-S26 (including the record of every analysis
+version and the TRIPOD+AI checklist) and Figures S1-S4.
+Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v6_before_rev7.tex`.
+
+Revision 7 changes: main text shortened to about 3,800 words with 5 tables; internal-external
+cross-validation presented as the main evidence and the testing hierarchy labelled post hoc; secondary
+family reduced to four (race-free model now a sensitivity analysis); sex-specific OST; ORAI and SCORE in
+women only; cases detected per 1,000 screened at fixed DXA capacity; decision curves restricted to 2-15%;
+survey-weight distribution and trimming; scanner-shift sensitivity analysis; short form moved to the
+supplement and not recommended; FRAX rationale; 14 new references; tuning, incremental-value, subgroup,
+SHAP and short-form tables moved to the supplement.
 
 Revision 6 changes: explicit testing hierarchy (primary: full model vs OST; secondary, Holm-adjusted:
 ORAI, SCORE, age-weight-sex LR, Boruta + XGBoost, race-free model; ML vs LR as equivalence within

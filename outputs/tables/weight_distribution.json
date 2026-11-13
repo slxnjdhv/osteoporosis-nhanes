@@ -1,0 +1,16 @@
+{
+ "inflation_min": 1.0492588217315648,
+ "inflation_median": 1.1692802976139292,
+ "inflation_p99": 3.8456868847704797,
+ "inflation_max": 32.501190864713195,
+ "n_inflation_gt5": 18,
+ "n_inflation_gt10": 11,
+ "normalised_weight_quantiles": {
+  "q1": 0.13388965132362812,
+  "q50": 0.49783914992733524,
+  "q99": 6.673886002114986
+ },
+ "normalised_weight_max": 10.116986616313868,
+ "kish_deff_wmec": 2.8725319191854117,
+ "kish_deff_wadj": 2.8398187408824196
+}
