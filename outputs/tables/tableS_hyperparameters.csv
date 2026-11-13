@@ -1,0 +1,27 @@
+model,hyperparameter,lower,upper,scale,selected,at_bound,trials
+LR,C,0.001,100.0,log,0.1345969096113918,False,40
+LR-spline,C,0.001,100.0,log,1.9230037697425957,False,40
+SVM,C,0.01,100.0,log,1.0540196134359852,False,40
+SVM,gamma,1e-05,1.0,log,0.003148208795259631,False,40
+RF,n_estimators,200.0,1000.0,int step 100,700.0,False,40
+RF,max_depth,3.0,20.0,int step 1,12.0,False,40
+RF,min_samples_leaf,1.0,60.0,int step 1,27.0,False,40
+RF,max_features,0.05,1.0,linear,0.09343671401806844,False,40
+XGBoost,n_estimators,100.0,2000.0,int step 50,1600.0,False,40
+XGBoost,learning_rate,0.002,0.3,log,0.02335084694769909,False,40
+XGBoost,max_depth,1.0,8.0,int step 1,1.0,True,40
+XGBoost,subsample,0.5,1.0,linear,0.7057727507071723,False,40
+XGBoost,colsample_bytree,0.5,1.0,linear,0.647607164240368,False,40
+XGBoost,min_child_weight,1.0,20.0,log,1.4018170083893022,False,40
+XGBoost,reg_lambda,0.001,10.0,log,2.9049096616551,False,40
+LightGBM,n_estimators,100.0,2000.0,int step 50,1300.0,False,40
+LightGBM,learning_rate,0.002,0.3,log,0.01646677271892616,False,40
+LightGBM,num_leaves,2.0,64.0,int step 1,2.0,True,40
+LightGBM,min_child_samples,1.0,200.0,int step 1,198.0,True,40
+LightGBM,subsample,0.5,1.0,linear,0.8329591207973828,False,40
+LightGBM,colsample_bytree,0.5,1.0,linear,0.6138863149214385,False,40
+LightGBM,reg_lambda,0.001,10.0,log,0.16797443072097734,False,40
+CatBoost,iterations,200.0,2000.0,int step 100,600.0,False,40
+CatBoost,depth,1.0,8.0,int step 1,4.0,False,40
+CatBoost,learning_rate,0.002,0.3,log,0.013469516530752443,False,40
+CatBoost,l2_leaf_reg,1.0,10.0,log,5.766917998736587,False,40

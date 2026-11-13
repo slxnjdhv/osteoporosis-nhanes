@@ -1,0 +1,9 @@
+model,strategy,default_cv_AUROC,tuned_cv_AUROC,params
+LR,none,0.876460818577167,0.8788778826369587,"{""C"": 0.1345969096113918}"
+SVM,class_weight,0.8411984558400422,0.8761128876218942,"{""C"": 1.0540196134359852, ""gamma"": 0.003148208795259631}"
+LR-spline,none,0.8734615663949676,0.8745541383836372,"{""C"": 1.9230037697425957}"
+XGBoost,none,0.8567054994537019,0.8752267185946181,"{""n_estimators"": 1600, ""learning_rate"": 0.02335084694769909, ""max_depth"": 1, ""subsample"": 0.7057727507071723, ""colsample_bytree"": 0.647607164240368, ""min_child_weight"": 1.4018170083893022, ""reg_lambda"": 2.9049096616551}"
+LightGBM,none,0.8521798848983103,0.8748931715368672,"{""n_estimators"": 1300, ""learning_rate"": 0.01646677271892616, ""num_leaves"": 2, ""min_child_samples"": 198, ""subsample"": 0.8329591207973828, ""colsample_bytree"": 0.6138863149214385, ""reg_lambda"": 0.16797443072097734}"
+Stacking,class_weight,0.8646521609699762,0.874362750563999,tuned base learners
+CatBoost,none,0.8648365216017188,0.8726135665467893,"{""iterations"": 600, ""depth"": 4, ""learning_rate"": 0.013469516530752443, ""l2_leaf_reg"": 5.766917998736587}"
+RF,class_weight,0.8613153133452357,0.864436790236784,"{""n_estimators"": 700, ""max_depth"": 12, ""min_samples_leaf"": 27, ""max_features"": 0.09343671401806844}"

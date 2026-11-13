@@ -1,0 +1,2 @@
+short_form_features,AUROC_full,AUROC_short,boot_p_vs_full,AUROC_OST,boot_p_vs_OST,AUROC_LR3,boot_p_vs_LR3,diff_vs_OST_low,diff_vs_OST_high,diff_vs_LR3_low,diff_vs_LR3_high
+weight;postmenopausal;age;height;waist;hormone_use;prior_fracture;arthritis;cancer;stroke,0.8691705892608088,0.8515897402370991,0.018,0.8411866936889819,0.234,0.8513309579846582,0.966,-0.006869229816708455,0.028430356432040442,-0.01325016815019533,0.014265549170782252

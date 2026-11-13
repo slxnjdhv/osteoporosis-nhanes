@@ -1,0 +1,20 @@
+# NHANES data: public, re-downloadable via src/download_nhanes.py + src/build_dataset.py
+data/
+# Model/tooling artefacts
+catboost_info/
+src/catboost_info/
+__pycache__/
+*.pyc
+.DS_Store
+# Old backups and bundles (history is kept in git)
+outputs_v5_backup/
+manuscript/main_v*_before_*.tex
+manuscript/manuscript.zip
+# LaTeX build files
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.toc

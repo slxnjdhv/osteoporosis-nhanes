@@ -1,0 +1,1344 @@
+% =====================================================================
+%  Does machine learning improve on simple tools for osteoporosis
+%  screening? Temporal validation, calibration and subgroup performance
+%  in NHANES.   Build:  tectonic main.tex   (or pdflatex main, twice)
+%  Revision 6 (testing hierarchy; ORAI/SCORE; IECV; refit bootstrap; clinical strata; all numbers from outputs/tables)
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage[left]{lineno}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+\usepackage[colorlinks=true,linkcolor=blue!50!black,citecolor=blue!50!black,urlcolor=blue!50!black]{hyperref}
+
+\graphicspath{{figures/}}
+\captionsetup{font=small,labelfont=bf}
+\setlist{nosep,leftmargin=*}
+\onehalfspacing
+\linenumbers
+\emergencystretch=3em
+
+\begin{document}
+
+% ---------------------------------------------------------------- Title page
+\begin{titlepage}
+\begin{center}
+{\LARGE\bfseries Does Machine Learning Improve on Simple Tools for Osteoporosis Screening? Temporal Validation, Calibration and Subgroup Performance in NHANES\par}
+\vspace{1.5em}
+{\large [Author 1]$^{1}$, [Author 2]$^{1}$, [Corresponding author]$^{1,*}$\par}
+\vspace{1em}
+{\small $^{1}$[Department, Institution, City, Country]\\[2pt]
+$^{*}$Corresponding author: [name, postal address, e-mail]\par}
+\end{center}
+\vspace{2em}
+\noindent\textbf{Running title:} Machine learning vs simple tools for osteoporosis screening\\[4pt]
+\textbf{Word count:} [main text] \quad \textbf{Tables:} 9 \quad \textbf{Figures:} 5 (+17 supplementary tables, 3 supplementary figures)\\[4pt]
+\textbf{Keywords:} osteoporosis; mass screening; machine learning; Osteoporosis Self-Assessment Tool; temporal validation; NHANES
+
+\vfill
+\noindent\textbf{Declarations}
+
+\noindent\textbf{Funding.} [Funding statement, or ``This research received no specific grant from any funding agency.'']\\
+\textbf{Competing interests.} The authors declare no competing interests.\\
+\textbf{Ethics approval.} NHANES protocols were approved by the NCHS Research Ethics Review Board, and all participants provided written informed consent. This secondary analysis of publicly available, de-identified data did not require additional institutional review.\\
+\textbf{Data availability.} NHANES data are publicly available from the National Center for Health Statistics (\url{https://www.cdc.gov/nchs/nhanes/}).\\
+\textbf{Code availability.} Analysis code, including the fitted model equations, is available at [GitHub / Zenodo DOI].\\
+\textbf{Protocol and registration.} No study protocol was prepared in advance and the study was not registered.\\
+\textbf{Patient and public involvement.} None.\\
+\textbf{Author contributions.} [CRediT statement.]
+\end{titlepage}
+
+% ---------------------------------------------------------------- Abstract
+\begin{abstract}
+\noindent\textbf{Background.} Machine learning (ML) models for osteoporosis screening are often built on survey data but are rarely compared with simple clinical tools under equal conditions.
+
+\noindent\textbf{Methods.} We studied 9,657 adults aged $\ge$50 years from five NHANES cycles not diagnosed with or treated for osteoporosis; the outcome was a hip T-score $\le -2.5$. Models were developed on 2005--2014 (343 cases) and validated on 2017--2018 data ($n=2{,}008$; 96 cases). Eight model families using 35 predictors from history, examination and blood tests were each tuned with 40 Bayesian-optimisation trials and recalibrated. In a testing hierarchy, the primary comparison was the best model versus the Osteoporosis Self-Assessment Tool (OST); secondary comparisons, Holm-adjusted, were with ORAI, SCORE, an age--weight--sex model and a Boruta + XGBoost pipeline. ML families were tested for equivalence with logistic regression (margin $\pm$0.02 in AUROC).
+
+\noindent\textbf{Results.} The selected penalised logistic regression had a validation AUROC of 0.869 (95\% CI 0.831--0.904), with a calibration slope of 1.00. It exceeded OST (0.841) by 0.028 (0.007--0.052; $P=0.014$), but the interval included zero when refitting was bootstrapped ($-$0.004 to 0.052). Across five held-out cycles, the pooled gain over OST was 0.025 (0.015--0.034). The model exceeded ORAI (0.791) but not SCORE (0.841; adjusted $P=0.11$) or the age--weight--sex model (0.851; adjusted $P=0.21$). Six of seven ML families were equivalent to logistic regression. A 10-predictor short form without blood tests performed like the age--weight--sex model (0.852).
+
+\noindent\textbf{Conclusions.} Equally tuned ML did not outperform logistic regression, and 35 predictors added about 0.02--0.03 in AUROC to simple tools, a gain of uncertain clinical value.
+\end{abstract}
+
+% ================================================================= 1 Introduction
+\section{Introduction}
+
+Osteoporosis is a systemic skeletal disease of low bone mass and deteriorated bone microarchitecture that leads to fragility fractures \cite{compston2019}. Among US adults aged 50 years and older, about one in eight has osteoporosis at the femoral neck or lumbar spine, and its prevalence in women is several times that in men \cite{sarafrazi2021}. Hip and vertebral fractures cause disability, loss of independence and excess mortality. Yet effective treatments can lower fracture risk substantially once osteoporosis is recognised \cite{compston2019}.
+
+Diagnosis depends on dual-energy X-ray absorptiometry (DXA), with osteoporosis defined as a T-score of $-2.5$ or lower \cite{kanis1994}. DXA is not universally available. Guidelines target screening mainly at women aged 65 and older, leaving men and younger high-risk adults under-assessed \cite{uspstf2018}. Simple tools that use routine information to prioritise who most needs DXA could help close this gap. The Osteoporosis Self-Assessment Tool (OST), $0.2 \times (\text{weight} - \text{age})$, and its Asian counterpart OSTA are widely used for this purpose \cite{geusens2002,koh2001}. Other questionnaire-based indices include the Osteoporosis Risk Assessment Instrument (ORAI) and the Simple Calculated Osteoporosis Risk Estimation (SCORE) \cite{cadarette2000,lydick1998}. FRAX instead estimates fracture probability from clinical risk factors \cite{kanis2008}.
+
+Machine learning (ML) can combine many routine predictors, and several studies have applied it to survey data such as the National Health and Nutrition Examination Survey (NHANES). Most recently, Zhang et al.\ compared three feature-selection methods (Boruta, XGBoost and Lasso) with four classifiers on NHANES, reporting performance mainly as accuracy, with the highest area under the receiver operating characteristic curve (AUROC, 0.85) for random forest \cite{zhang2025}. Such studies, however, leave several questions unanswered:
+\begin{enumerate}
+\item \textbf{Is ML better than existing simple tools?} ML models are rarely benchmarked against OST, ORAI, SCORE or a minimal regression model, and the ML models are often tuned more carefully than the regression they are compared with, or the reverse.
+\item \textbf{Is the evaluation informative?} When most people do not have osteoporosis, high accuracy can be achieved by predicting ``no osteoporosis'' for everyone. Calibration and clinical net benefit matter more for screening \cite{vancalster2019,vickers2006}.
+\item \textbf{Is the target population right?} A case-finding tool is meant for people not yet diagnosed or treated, yet survey-based models usually include participants who already know they have osteoporosis and may be treated for it.
+\item \textbf{Does the model hold up over time?} Random splits from the same years do not show whether performance persists in later populations.
+\item \textbf{Is the model equitable?} Pooled models can underperform in men or specific racial and ethnic groups, and using race as a predictor is increasingly questioned \cite{obermeyer2019,vyas2020}.
+\end{enumerate}
+Evidence from other prediction tasks suggests that ML often does not outperform logistic regression \cite{christodoulou2019}, and that class-imbalance corrections can harm calibration \cite{vandengoorbergh2022}. Our aim was not to propose another model, but to ask how much ML adds to simple tools for osteoporosis case-finding when every method is tuned equally and evaluated in the intended population and over time.
+
+We addressed these questions using 9,657 adults aged 50 and older from five NHANES cycles who had not been diagnosed with or treated for osteoporosis. Our contributions are:
+\begin{itemize}
+\item a temporal validation of eight equally tuned model families against three established screening indices (OST, ORAI and SCORE), a three-variable logistic model and a Boruta + XGBoost pipeline, in a screening population, with an explicit hierarchy of hypotheses and an equivalence test for ML versus regression;
+\item internal--external cross-validation across all five survey cycles, and a bootstrap that includes uncertainty from model refitting;
+\item a comparison of three class-imbalance strategies, with recalibration;
+\item a quantification of how much each group of predictors adds beyond age, weight and sex;
+\item an evaluation of discrimination, calibration and net benefit with confidence intervals, survey weighting and adjustment for DXA non-response;
+\item a subgroup analysis reporting event counts and uncertainty, including the strata targeted by screening guidelines (women aged 65 or older, younger postmenopausal women and older men), non-Hispanic Asian adults, sex-specific thresholds and a race-free model;
+\item a short form using only clinically obtainable, race-free predictors, published as an explicit equation, with a discussion of implementation in electronic health records.
+\end{itemize}
+The study is reported according to TRIPOD+AI \cite{collins2024} (Supplementary Table~\ref{tab:tripod}).
+
+% ================================================================= 2 Methods
+\section{Methods}
+
+\subsection{Data source}
+This study used publicly available, de-identified data from NHANES, a cross-sectional survey of the non-institutionalised US civilian population with a complex, multistage probability design, conducted by the National Center for Health Statistics (NCHS) \cite{johnson2013}. NHANES combines household interviews with standardised physical examinations, DXA and laboratory testing in mobile examination centres. We pooled the five 2-year cycles with femoral DXA measurements: 2005--2006, 2007--2008, 2009--2010, 2013--2014 and 2017--2018. The following files were downloaded from the NCHS website and merged on the respondent sequence number:
+\begin{itemize}
+\item demographic and body-measure files;
+\item DXA files for the femur and lumbar spine;
+\item laboratory files for standard biochemistry and vitamin D;
+\item questionnaire files for smoking, diabetes, medical conditions, osteoporosis history, reproductive health and alcohol use;
+\item prescription-medication files (used only to identify osteoporosis treatment).
+\end{itemize}
+
+\subsection{Study population}
+Of 50,463 participants in the five cycles, 14,166 were aged 50 years or older, and 10,981 of these had a valid femoral neck bone mineral density (BMD) measurement. Participants missing more than 50\% of candidate predictors were to be excluded, but none met this criterion. Because the intended use is case-finding before DXA, we then excluded 1,324 participants who reported having been told by a doctor that they had osteoporosis (1,155) or who reported current use of an osteoporosis medication without such a diagnosis (169). Medications were bisphosphonates (alendronate, risedronate, ibandronate, zoledronic acid, etidronate), denosumab, raloxifene, bazedoxifene, teriparatide, abaloparatide, romosozumab and calcitonin; 486 excluded participants used one. Of the 1,324 excluded participants, 282 met the outcome definition. The final cohort comprised 9,657 participants (Figure~\ref{fig:flow}). Participants with a missing answer to the diagnosis question were treated as not diagnosed. The 3,185 participants without DXA are compared with the cohort in Supplementary Table~\ref{tab:excl}, and the analysis including diagnosed or treated participants is reported as a sensitivity analysis.
+
+\subsection{Outcome definition}
+The primary outcome was osteoporosis at the hip, defined according to World Health Organization criteria \cite{kanis1994} as a T-score of $-2.5$ or lower at the femoral neck or total hip. T-scores were calculated as (participant BMD $-$ reference mean)/reference SD. The reference values were those of NHANES III non-Hispanic white women aged 20--29 years \cite{looker1998}: mean 0.858\,g/cm$^2$ (SD 0.120) for the femoral neck and mean 0.942\,g/cm$^2$ (SD 0.122) for the total hip. The same female references were applied to both sexes, as recommended by the International Society for Clinical Densitometry (ISCD) \cite{watts2013}. DXA was performed and analysed by trained technologists following the standard NHANES protocol, independently of the questionnaire and laboratory data used as predictors.
+
+The primary outcome was revised during the analysis. Earlier versions of this study defined osteoporosis at the femoral neck or lumbar spine. We changed to a hip-based outcome because the hip was scanned and analysed with the same protocol and reference values in every cycle, whereas the lumbar spine was not. NHANES reports a total L1--L4 BMD only for complete spine scans, and the share of partial scans (with at least one invalid vertebra) rose from 15.3\% in 2005--2006 to 38.1\% in 2017--2018, so a spine-based outcome would have shifted in definition between the development and validation periods. The results of every version of the analysis are reported in Supplementary Table~\ref{tab:versions}.
+
+Hip DXA was performed on Hologic QDR-4500A densitometers up to 2009--2010 and on Hologic Discovery densitometers thereafter. We found no hip BMD cross-calibration between these scanner models in the NHANES DXA documentation, and applied none. Mean femoral neck BMD in women was 0.744--0.753\,g/cm$^2$ in 2005--2010 and 0.729--0.731\,g/cm$^2$ in 2013--2018, a difference of about 0.15 reference SD that coincides with both the scanner change and a change in the population sampled (non-Hispanic Asian adults were oversampled from 2011). Hip-based prevalence nevertheless remained stable (4.0\%--4.8\% by cycle), and we refitted the model on 2013--2014 alone, which used the same scanner type as the validation cycle.
+
+Two spine-inclusive outcomes were analysed as sensitivity analyses: (i) hip or complete-scan L1--L4 spine T-score $\le -2.5$; and (ii) hip or spine T-score $\le -2.5$, with spine BMD calculated from at least two valid vertebrae as total bone mineral content divided by total projected area \cite{baim2008}. Spine T-scores used the Hologic young white-female reference used in previous NHANES analyses (mean 1.047\,g/cm$^2$, SD 0.110) \cite{sarafrazi2021,wright2014}.
+
+\subsection{Candidate predictors}
+We selected 35 candidate predictors obtainable from history, physical examination or standard blood tests. Not all of them are routinely recorded in practice (for example, income and vitamin D); this is addressed by the short form and in the Discussion. All DXA-derived variables were excluded, as were self-reported diagnosis or treatment of osteoporosis, to prevent outcome leakage.
+\begin{itemize}
+\item \textbf{Demographic:} age; sex; race/ethnicity (Mexican American, other Hispanic, non-Hispanic white [reference], non-Hispanic Black, other/multiracial); education level; family income-to-poverty ratio (PIR).
+\item \textbf{Anthropometric:} body mass index (BMI), weight, height and waist circumference.
+\item \textbf{Laboratory:} serum calcium, phosphorus, alkaline phosphatase, creatinine, albumin, uric acid, glucose, total protein, total cholesterol and 25-hydroxyvitamin D.
+\item \textbf{FRAX-type clinical risk factors:} prior hip, wrist or spine fracture (any cause); parental hip fracture; ever daily use of prednisone or cortisone; current smoking; alcohol use of three or more drinks per day.
+\item \textbf{Other history:} former smoking; postmenopausal status (women reporting no regular menstrual periods in the past 12 months, which also captures hysterectomy); ever use of female hormones; and self-reported physician-diagnosed diabetes, arthritis, coronary heart disease, stroke and cancer.
+\end{itemize}
+Race/ethnicity was coded from the five-category variable (RIDRETH1) available in every cycle. Non-Hispanic Asian adults can be identified separately only from 2011 (RIDRETH3), so in the models they fall within ``other/multiracial''. This category therefore changed composition over time: it made up 2.9\%--4.6\% of participants in 2005--2010 and 17.8\% in 2017--2018, when 77\% of its members were non-Hispanic Asian. We evaluated non-Hispanic Asian adults as a separate subgroup and refitted the model without them.
+
+\subsection{Data preparation}
+Several variables needed harmonisation across cycles:
+\begin{itemize}
+\item \textbf{Age} is top-coded at 85 years in 2005--2006 and at 80 years thereafter, so it was capped at 80 years in all cycles.
+\item \textbf{Creatinine} from 2005--2006 was recalibrated to the standardised method as recommended by NCHS ($-0.016 + 0.978 \times$ measured value).
+\item \textbf{Vitamin D} was taken from the liquid chromatography--tandem mass spectrometry (LC-MS/MS) or LC-MS/MS-equivalent values released for each cycle, which are named differently in 2005--2006 (LBDVIDMS) and later cycles (LBXVIDMS).
+\item \textbf{Alcohol:} average daily intake was calculated as drinks per drinking day multiplied by drinking days per year, divided by 365. Drinking frequency was recorded as a count per week, month or year up to 2013--2014, and as a frequency category in 2017--2018, which we converted to approximate days per year. Non-drinkers were coded 0. Because this change coincides with the validation cycle, we also refitted the model without alcohol.
+\item \textbf{Zero values:} values stored in the SAS transport files as numerical underflow (absolute value $<10^{-30}$) were restored to exactly 0.
+\end{itemize}
+Other laboratory measurements were used as released. Their means differed between periods (for example, alkaline phosphatase 72.6 vs 82.6\,U/L and albumin 4.20 vs 4.04\,g/dL; Supplementary Table~\ref{tab:devval}), which probably reflects changes in laboratory methods; we therefore also refitted the model without laboratory predictors. Reproductive variables were coded 0 for men. Responses of ``refused'' or ``don't know'' were set to missing, and borderline diabetes was coded as no diabetes. To detect unharmonised variables, the analysis stopped automatically if any predictor was entirely missing within a cycle. Missingness by cycle is shown in Supplementary Table~\ref{tab:miss}.
+
+\subsection{Development and temporal validation sets}
+Participants from 2005--2014 ($n=7{,}649$; 343 cases) formed the development set, and participants from 2017--2018 ($n=2{,}008$; 96 cases) the temporal validation set. All model fitting, tuning, threshold selection, recalibration and short-form predictor selection used the development set only. However, the validation set was evaluated in earlier versions of this analysis, before the outcome definition and the cohort were revised (Supplementary Table~\ref{tab:versions}), so it is not untouched in a strict sense.
+
+\subsection{Sample size}
+No formal sample-size calculation was performed; the available NHANES data were used. The development set provided 343 events, or 9.8 per candidate predictor, so all regression models were fitted with L2 penalisation, and calibration slopes were checked in the validation set. The validation set contained 96 events, which limits the precision of differences between models; we therefore interpret confidence intervals rather than significance alone.
+
+\subsection{Missing data}
+Missing predictor values were imputed by iterative chained-equation imputation (scikit-learn IterativeImputer, 10 iterations) \cite{vanbuuren2011}. The proportion missing was 9.5\% for PIR, 5.9\% for vitamin D, 4.2\% for alcohol and $\le$4.4\% for every other predictor. The outcome was complete by design. The imputer was fitted within each cross-validation training fold, so no information leaked from validation data. All predictors, including binary ones, were then standardised.
+
+\subsection{Models, class-imbalance strategies and tuning}
+We compared eight model families:
+\begin{itemize}
+\item logistic regression (LR) with linear terms;
+\item LR with cubic B-spline terms for the 17 continuous predictors (4 knots at quantiles, linear extrapolation beyond the boundary knots; LR-spline) \cite{perperoglou2019};
+\item a support vector machine (SVM, radial basis kernel);
+\item random forest (RF);
+\item XGBoost \cite{chen2016}, LightGBM \cite{ke2017} and CatBoost \cite{prokhorenkova2018};
+\item a stacking ensemble, with RF, XGBoost, LightGBM and CatBoost as base learners and a logistic regression meta-learner.
+\end{itemize}
+Each model was first fitted with default hyperparameters and three class-imbalance strategies: none, cost-sensitive class weighting and SMOTE \cite{chawla2002}, with resampling applied to training folds only. (SMOTE-Tomek \cite{batista2004}, used in an earlier version, removed no Tomek links in these data and was therefore identical to SMOTE.) All 35 predictors were used, without data-driven feature selection. The 24 configurations were evaluated by 5-fold stratified cross-validation (Supplementary Table~\ref{tab:compare}).
+
+To compare families on equal terms, every family was then tuned with its best imbalance strategy by Bayesian optimisation (Optuna, tree-structured Parzen estimator \cite{akiba2019}) on the same folds, with 40 trials for every family. Search spaces were deliberately wide, extending to shallow trees and stumps, slow learning rates and up to 2,000 boosting rounds (Supplementary Table~\ref{tab:hyper}). The stacking ensemble used the tuned base learners. Tuned hyperparameters were kept only if they improved on the defaults. The family with the highest tuned cross-validated AUROC (to three decimal places) was selected as the full model. Tuning and selection on the same folds make the internal estimates slightly optimistic, but do not affect the temporal estimates. The overall workflow is shown in Supplementary Figure~\ref{fig:workflow}.
+
+\subsection{Benchmarks}
+Six comparators were evaluated on the same temporal validation set, in addition to every tuned model family:
+\begin{enumerate}
+\item \textbf{OST} \cite{geusens2002}, $0.2 \times (\text{weight in kg} - \text{age in years})$. Its discrimination and its commonly used cut-offs ($<2$ and $<-1$) \cite{geusens2002,rud2007} were evaluated without any fitting, overall and by sex. At each cut-off, we compared it with the full model at a threshold that referred the same proportion of participants, with a bootstrap CI for the number of additional cases detected. For calibration, net benefit and the Youden threshold, the score was converted to a probability by logistic recalibration on the development data (``recalibrated OST'').
+\item \textbf{ORAI} \cite{cadarette2000}: 15, 9 or 5 points for age $\ge$75, 65--74 or 55--64 years; 9 or 3 points for weight $<$60 or 60--69\,kg; and 2 points for no estrogen use. NHANES records ever rather than current use of female hormones, so ever use was taken as estrogen use.
+\item \textbf{SCORE} \cite{lydick1998}: 5 points if not Black, 4 for rheumatoid arthritis, 4 for each fracture site (maximum 12), 3 times the first digit of age, and 1 for no estrogen use, minus weight in pounds divided by 10 (truncated). The original score counts non-traumatic wrist, rib and hip fractures after age 45; NHANES records hip, wrist and spine fractures of any cause, which we used instead. Rheumatoid arthritis was taken from the arthritis-type question. Rheumatoid arthritis was used only for SCORE.
+\item \textbf{A three-variable logistic regression} of age, weight and sex.
+\item \textbf{A Boruta + XGBoost pipeline} following the approach of Zhang et al.\ \cite{zhang2025}. Boruta \cite{kursa2010} selected features from our candidate set on the development data, and XGBoost, tuned with the same budget as the other families, was fitted to them. Because the original feature set and outcome definition differ, this tests the approach rather than the published model.
+\item \textbf{The race-free model} (below).
+\end{enumerate}
+ORAI and SCORE were developed in women; we applied them to both sexes, as we did OST. Like OST, both scores were evaluated as published for discrimination and converted to probabilities by logistic recalibration on the development data for calibration and net benefit.
+To mirror the published analysis, we also report all combinations of three feature-selection methods (Boruta, Lasso \cite{tibshirani1996} and XGBoost importance) with four classifiers (LR, SVM, RF and XGBoost), evaluated by 10-fold cross-validation on the development set. Features were selected once on the full development set, so these estimates are optimistic and are reported only for comparison with the published study.
+
+\subsection{Recalibration and thresholds}
+Every model was recalibrated by Platt scaling \cite{platt2000}, a logistic recalibration fitted on its out-of-fold development predictions. Internal calibration was assessed with cross-fitted recalibration, in which each fold was recalibrated using only the other folds. The primary classification threshold was set by the Youden index \cite{youden1950} on development predictions and applied unchanged to the temporal validation set. Because the Youden index weights sensitivity and specificity equally, which is not necessarily the right trade-off for screening, we also report a threshold giving 90\% sensitivity in the development set and fixed risk thresholds of 3\%, 5\% and 10\%.
+
+\subsection{Performance evaluation}
+Discrimination was assessed by AUROC and the area under the precision--recall curve (AUPRC). At each threshold we report sensitivity, specificity, positive and negative predictive values (PPV, NPV), the proportion referred and the number of cases detected. Calibration was assessed by grouped and loess-smoothed calibration plots, the Brier score, the calibration slope and calibration-in-the-large \cite{vancalster2019}. Clinical utility was assessed by decision curve analysis \cite{vickers2006} over thresholds of 0.01--0.40; at selected thresholds we report net benefit with bootstrap CIs, and true and false positives per 100 people.
+
+Unless stated otherwise, 95\% confidence intervals (CIs) and bootstrap $P$ values were obtained from 1,000 bootstrap resamples of the validation set, with the same resamples used for every model. Differences in AUROC were estimated by paired bootstrap with a two-sided percentile $P$ value; DeLong $P$ values \cite{delong1988,sunxu2014} gave the same conclusions and are provided with the code.
+
+\subsection{Hypotheses and multiplicity}
+Comparisons of the full model with other models were organised as a hierarchy of three families, defined in this revision of the analysis:
+\begin{enumerate}
+\item \textbf{Primary:} the full model versus OST, the most widely used simple tool, tested at $\alpha=0.05$ without adjustment.
+\item \textbf{Secondary} (tested only if the primary comparison was significant): the full model versus ORAI, SCORE, the three-variable model, the Boruta + XGBoost pipeline and the race-free model, with Holm adjustment \cite{holm1979} within this family of five.
+\item \textbf{Equivalence of ML and regression:} for each of the seven other tuned families, we asked whether its AUROC was equivalent to that of the full model within a margin of $\pm$0.02, chosen as a difference too small to matter for referral decisions. Equivalence was concluded if the 90\% paired bootstrap CI of the difference lay entirely within the margin (two one-sided tests at $\alpha=0.05$). Holm-adjusted two-sided $P$ values for a difference are also reported.
+\end{enumerate}
+The short form was compared descriptively. All other $P$ values are unadjusted and exploratory.
+
+\subsection{Internal--external validation and model-fitting uncertainty}
+Because a single temporal split gives one estimate, we also performed internal--external cross-validation by survey cycle \cite{steyerberg2016}: each of the five cycles was held out in turn, the full model (with the selected hyperparameters), the three-variable model and recalibrated OST were developed on the other four, and they were evaluated on the held-out cycle. AUROC differences in each cycle were estimated by paired bootstrap and pooled across cycles with a DerSimonian--Laird random-effects model \cite{dersimonian1986}, with a 95\% prediction interval; single AUROCs were pooled using Hanley--McNeil standard errors \cite{hanley1982}.
+
+The validation-set bootstrap does not reflect uncertainty in model fitting. We therefore also ran a refit bootstrap (200 replicates), in which the development set and the validation set were both resampled, the full model and the three-variable model were refitted to each development resample (hyperparameters fixed), and the AUROC difference with OST was computed on the validation resample.
+
+\subsection{Survey weighting and non-response}
+Models were fitted without survey weights, as is usual for prediction models. To estimate population-level performance, we also report AUROC, Brier score and observed versus predicted prevalence weighted by the 2017--2018 examination weights \cite{chen2020}, with design-based 95\% CIs from a Rao--Wu rescaled bootstrap over primary sampling units within strata (500 replicates). Because 22.5\% of eligible participants had no valid DXA, we additionally multiplied the examination weights by the inverse of the probability of having a DXA result, estimated by logistic regression on age, sex, education, PIR, BMI (with a squared term and missing-value indicators), race/ethnicity and cycle among all participants aged 50 or older.
+
+\subsection{Incremental value of predictor groups}
+To show where the predictive information lies, we fitted nested LR models, adding predictor groups in clinical order: age, weight and sex; other body measures and socio-demographic factors; clinical risk factors and history; laboratory tests; and race/ethnicity. Each model was developed and validated as above, and each step is summarised by the paired bootstrap 95\% CI and $P$ value for the change in AUROC.
+
+\subsection{Subgroup and fairness analysis}
+In the temporal validation set, we evaluated performance by sex, age group (50--64, 65--79, $\ge$80 years) and race/ethnicity, with non-Hispanic Asian adults reported separately from other/multiracial adults. For each subgroup we report the number of events, AUROC and sensitivity (95\% bootstrap CIs), specificity at the global threshold, and mean predicted risk versus observed prevalence. We also evaluated four clinical strata that correspond to screening recommendations \cite{uspstf2018}: women aged 50--64 years (screened if at increased risk), women aged 65 or older (screened routinely), men aged 50--69 and men aged 70 or older. In each we compared all benchmarks and the cases detected and referrals made by the full model at the global threshold and by OST $<2$. We also examined two remedies: \textbf{sex-specific thresholds}, chosen by the Youden index within each sex on the development data; and \textbf{a race-free model}, with the same configuration but without the race/ethnicity predictors \cite{vyas2020}.
+
+\subsection{Short-form model}
+Predictor importance was ranked by mean absolute SHapley Additive exPlanations (SHAP) value \cite{lundberg2017} on 500 randomly selected development-set participants (permutation explainer with 100 background samples, probability scale before recalibration); all SHAP figures use this sample. The short form was restricted to predictors that a clinician can obtain at a visit without a blood test and that are not socially assigned: race/ethnicity, PIR and education were excluded, as was BMI (redundant with weight and height). The 10 most important remaining predictors were fitted with LR, developed and evaluated in the same way as the full model, overall and by sex, and are reported as an explicit equation.
+
+\subsection{Sensitivity analyses}
+We repeated the development and validation of the full model, OST and the three-variable model for the two spine-inclusive outcomes, and for the primary outcome with diagnosed or treated participants included. We also refitted the full model without non-Hispanic Asian participants, on 2013--2014 alone (same scanner type as 2017--2018), without the 2005--2006 cycle (which needed the most harmonisation), without laboratory predictors and without alcohol.
+
+\subsection{Software}
+Analyses used Python 3.9.6 with pandas 2.3.3, NumPy 2.0.2, scikit-learn 1.6.1 \cite{pedregosa2011}, imbalanced-learn 0.12.4, XGBoost 2.1.4, LightGBM 4.6.0, CatBoost 1.2.10, Boruta 0.4.3, Optuna 5.0.0, SHAP 0.49.1 and statsmodels 0.14.6, with a fixed random seed of 42. Two-sided $P<0.05$ was considered significant.
+
+% -------- Figure 1: participant flow
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=center, text width=6.2cm, minimum height=1cm, font=\small},
+  ex/.style={draw, rounded corners=2pt, align=left, text width=5.0cm, font=\small, fill=gray!8},
+  arr/.style={-{Stealth[length=2.2mm]}, thick},
+  node distance=0.8cm]
+\node[box] (a) {NHANES participants, cycles 2005--2010, 2013--2014, 2017--2018\\ \textit{n}\,=\,50,463};
+\node[box, below=of a] (b) {Aged $\ge$50 years\\ \textit{n}\,=\,14,166};
+\node[box, below=of b] (b2) {With valid femoral neck DXA\\ \textit{n}\,=\,10,981};
+\node[box, below=1.1cm of b2] (c) {Final screening cohort\\ \textit{n}\,=\,9,657\\ hip osteoporosis \textit{n}\,=\,439 (4.5\%)};
+\coordinate (m1) at ($(a.south)!0.5!(b.north)$);
+\coordinate (m2) at ($(b.south)!0.5!(b2.north)$);
+\coordinate (m3) at ($(b2.south)!0.5!(c.north)$);
+\node[ex, anchor=west] (x1) at ($(m1)+(3.6,0)$) {Excluded: aged $<$50 years\\ \textit{n}\,=\,36,297};
+\node[ex, anchor=west] (x2) at ($(m2)+(3.6,0)$) {Excluded: no valid femoral neck DXA\\ \textit{n}\,=\,3,185};
+\node[ex, anchor=west] (x3) at ($(m3)+(3.6,0)$) {Excluded: \textit{n}\,=\,1,324\\ diagnosed osteoporosis, 1,155\\ osteoporosis drug only, 169};
+\node[box, text width=4.3cm, anchor=north] (d) at ($(c.south)+(-2.7,-1.1)$) {Development set\\ 2005--2014\\ \textit{n}\,=\,7,649; 343 cases (4.5\%)};
+\node[box, text width=4.3cm, anchor=north] (e) at ($(c.south)+(2.7,-1.1)$) {Temporal validation set\\ 2017--2018\\ \textit{n}\,=\,2,008; 96 cases (4.8\%)};
+\draw[arr] (a) -- (b); \draw[arr] (b) -- (b2); \draw[arr] (b2) -- (c);
+\draw[arr] (m1) -- (x1.west);
+\draw[arr] (m2) -- (x2.west);
+\draw[arr] (m3) -- (x3.west);
+\draw[thick] (c.south) -- ++(0,-0.55) coordinate (split);
+\draw[arr] (split) -| (d.north);
+\draw[arr] (split) -| (e.north);
+\end{tikzpicture}
+\caption{Participant flow. Percentages are the prevalence of osteoporosis at the hip (femoral neck or total hip T-score $\le -2.5$). No participant was excluded for missing more than 50\% of predictors.}
+\label{fig:flow}
+\end{figure}
+
+
+% ================================================================= 3 Results
+\section{Results}
+
+\subsection{Participant characteristics}
+The cohort comprised 9,657 adults (mean age 64.2 years; 43.0\% women), of whom 439 (4.5\%) had undiagnosed osteoporosis at the hip. The survey-weighted prevalence was 3.9\%. Prevalence was stable across cycles (4.0\%--4.8\%), at 4.5\% in the development set and 4.8\% in the validation set. Compared with participants without osteoporosis, those with osteoporosis were older and more often women and postmenopausal. They had lower body size and income, and more prior fractures (22.3\% vs 11.6\%) and strokes. They were less often non-Hispanic Black (Table~\ref{tab:baseline}).
+
+The validation cohort differed from the development cohort in some respects (Supplementary Table~\ref{tab:devval}): it had higher vitamin D and alkaline phosphatase, lower albumin and phosphorus, more diabetes, less hormone use and more participants of other or multiracial ethnicity (17.8\% vs 5.9\%). Participants without DXA were older (67.6 vs 64.2 years), heavier (BMI 33.0 vs 28.7\,kg/m$^2$) and more often women and non-Hispanic Black (Supplementary Table~\ref{tab:excl}).
+
+\begin{table}[!htbp]
+\centering
+\caption{Baseline characteristics by osteoporosis status ($n=9{,}657$). Values are mean (SD) or $n$ (\%); weighted columns are survey-weighted means or percentages. $P$ values are from unweighted Welch's $t$-tests or $\chi^2$ tests. Reproductive variables are expressed as a percentage of all participants (men coded 0).}
+\label{tab:baseline}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccc}
+\toprule
+ & \multicolumn{2}{c}{Unweighted} & & \multicolumn{2}{c}{Weighted} \\
+\cmidrule{2-3}\cmidrule{5-6}
+Characteristic & No ($n=9{,}218$) & Yes ($n=439$) & $P$ & No & Yes \\
+\midrule
+Age, years & 63.88 (9.25) & 71.14 (9.07) & $<$0.001 & 61.9 & 70.0 \\
+Female sex & 3,833 (41.6) & 318 (72.4) & $<$0.001 & 45.3 & 76.5 \\
+Postmenopausal & 3,351 (37.1) & 293 (70.4) & $<$0.001 & 39.7 & 74.7 \\
+Ever used female hormones & 1,299 (14.4) & 70 (16.9) & 0.18 & 17.8 & 19.5 \\
+Prior hip, wrist or spine fracture & 1,069 (11.6) & 98 (22.3) & $<$0.001 & 13.4 & 23.4 \\
+Parental hip fracture & 889 (9.9) & 45 (10.7) & 0.65 & 11.1 & 12.5 \\
+Ever daily glucocorticoid use & 495 (5.4) & 22 (5.1) & 0.85 & 6.1 & 7.3 \\
+Alcohol $\ge$3 drinks/day & 222 (2.5) & 3 (0.7) & 0.036 & 2.5 & 1.3 \\
+Current smoker & 1,562 (17.0) & 92 (21.0) & 0.035 & 15.6 & 25.3 \\
+Stroke & 512 (5.6) & 45 (10.3) & $<$0.001 & 4.4 & 8.4 \\
+Diabetes & 1,771 (19.2) & 77 (17.5) & 0.42 & 14.7 & 12.3 \\
+Non-Hispanic Black & 1,991 (21.6) & 43 (9.8) & $<$0.001 & 9.7 & 4.6 \\
+Income-to-poverty ratio & 2.74 (1.62) & 2.10 (1.37) & $<$0.001 & 3.33 & 2.43 \\
+BMI, kg/m$^2$ & 28.94 (5.53) & 24.41 (4.46) & $<$0.001 & 28.97 & 24.37 \\
+Weight, kg & 81.51 (17.75) & 62.23 (13.56) & $<$0.001 & 82.8 & 62.4 \\
+Height, cm & 167.67 (9.84) & 159.44 (8.93) & $<$0.001 & 168.8 & 159.9 \\
+Waist, cm & 101.60 (13.62) & 90.73 (13.29) & $<$0.001 & 101.7 & 90.0 \\
+Alkaline phosphatase, U/L & 74.31 (24.62) & 82.85 (28.38) & $<$0.001 & 71.9 & 82.5 \\
+Uric acid, mg/dL & 5.72 (1.43) & 5.29 (1.44) & $<$0.001 & 5.62 & 5.12 \\
+25(OH) vitamin D, nmol/L & 67.37 (27.85) & 67.17 (30.44) & 0.90 & 72.8 & 69.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Re-implementation of the published approach}
+In 10-fold cross-validation, LR had the highest AUROC with every feature set (0.871--0.879). XGBoost (0.845--0.855) and RF (0.848--0.854) followed, and SVM with default settings performed worst (0.653--0.777) (Supplementary Table~\ref{tab:reimpl}). Accuracy was 0.954--0.957 for all 12 combinations regardless of discrimination, almost identical to the 95.5\% of the development set without osteoporosis (the accuracy of predicting ``no osteoporosis'' for everyone). Accuracy therefore did not separate the models. Boruta and XGBoost importance each selected 10 predictors, and Lasso retained 34 (Supplementary Table~\ref{tab:fs}).
+
+\subsection{Model comparison and tuning}
+With default hyperparameters, cross-validated AUROC across the 24 configurations ranged from 0.785 (SVM without imbalance handling) to 0.876 (LR without imbalance handling) (Supplementary Table~\ref{tab:compare}). Imbalance handling raised the AUROC of SVM (0.785 to 0.841 with class weighting) and of RF (0.853 to 0.861 with class weighting or SMOTE), but not of the other families, and SMOTE lowered the AUPRC of every tree-based model. Class weighting and SMOTE raised the raw Brier score of LR from 0.035 to 0.127--0.137, reflecting inflated predicted risks; recalibration removed this difference.
+
+Tuning narrowed the gaps between families (Table~\ref{tab:tuned}). With each family's best default configuration, the gap to LR ranged from 0.003 (LR-spline) to 0.035 (SVM). Tuning raised the AUROC of SVM by 0.035, of LightGBM by 0.023 and of XGBoost by 0.018, but LR by only 0.003. After tuning, seven of the eight families lay within 0.006 of each other (0.873--0.879), and RF reached 0.864. Penalised LR remained the highest (0.879; $C=0.13$) and was selected as the full model. Gradient-boosting models converged on very shallow trees (XGBoost depth 1; LightGBM two leaves) with many rounds and slow learning rates, that is, on nearly additive models; these optima lie at the lower limit of what the model class allows, not at an arbitrary search bound (Supplementary Table~\ref{tab:hyper}).
+
+\begin{table}[!htbp]
+\centering
+\caption{Cross-validated AUROC of each model family before and after equal-budget tuning (Optuna, 40 trials per family, development set, same 5 folds), with its best imbalance strategy. Stacking used the tuned base learners. Search spaces and selected values are in Supplementary Table~\ref{tab:hyper}.}
+\label{tab:tuned}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Family & Strategy & Trials & Default AUROC & Tuned AUROC & Change \\
+\midrule
+LR & None & 40 & 0.876 & 0.879 & 0.003 \\
+SVM & Class wt & 40 & 0.841 & 0.876 & 0.035 \\
+LR-spline & None & 40 & 0.873 & 0.875 & 0.002 \\
+XGBoost & None & 40 & 0.857 & 0.875 & 0.018 \\
+LightGBM & None & 40 & 0.852 & 0.875 & 0.023 \\
+Stacking & Class wt & -- & 0.865 & 0.874 & 0.009 \\
+CatBoost & None & 40 & 0.865 & 0.873 & 0.008 \\
+RF & Class wt & 40 & 0.861 & 0.864 & 0.003 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Temporal validation against benchmarks}
+On the 2017--2018 cycle, the full model (penalised LR, 35 predictors) achieved an AUROC of 0.869 (95\% CI 0.831--0.904), close to its internal estimate (0.877, 0.857--0.896) (Table~\ref{tab:perf}, Figure~\ref{fig:roc}).
+
+\textit{Primary comparison.} The full model exceeded OST (0.841) by 0.028 (95\% CI 0.007--0.052; $P=0.014$). When uncertainty from model refitting was included by resampling the development set as well, the 95\% CI widened to $-$0.004 to 0.052 (difference $\le 0$ in 4.5\% of 200 replicates), and the CI for the full model's AUROC to 0.824--0.899.
+
+\textit{Secondary comparisons.} The full model clearly exceeded ORAI (0.791; difference 0.078, 0.047--0.115; Holm $P=0.005$). Its differences from SCORE (0.841; 0.029, 0.003--0.055; unadjusted $P=0.028$, Holm $P=0.11$), the three-variable model (0.851; 0.018, $-$0.001 to 0.039; Holm $P=0.21$), Boruta + XGBoost (0.856; 0.013, $-$0.007 to 0.030; Holm $P=0.27$) and the race-free model (0.863; 0.006, $-$0.001 to 0.012; Holm $P=0.27$) were not significant after adjustment.
+
+\textit{ML versus regression.} The tuned ML families ranged from 0.862 (RF) to 0.872 (stacking). For six of the seven, the 90\% CI of the difference from LR lay within $\pm$0.02, so they were equivalent to LR; for RF, the upper limit (0.020) touched the margin, so equivalence could not be concluded, although RF was not better (difference 0.007, 90\% CI $-$0.008 to 0.020; Holm $P=1.00$).
+
+The data are therefore compatible with no gain from 35 predictors over age, weight and sex, and with gains of up to about 0.04--0.05 in AUROC over OST or SCORE.
+
+At the development-set Youden threshold (predicted risk $\ge$4.8\%), the full model referred 23.8\% of participants and detected 77 of 96 cases (sensitivity 0.802, specificity 0.791, NPV 0.988).
+
+\begin{table}[!htbp]
+\centering
+\caption{Temporal validation performance ($n=2{,}008$; 96 with osteoporosis), with 95\% bootstrap CIs. Sensitivity, specificity and the proportion referred are at each model's development-set Youden threshold; for OST, ORAI and SCORE, values other than AUROC and AUPRC are for the recalibrated score. All ML families were tuned with the same budget. $\Delta$AUROC, full model minus each alternative (paired bootstrap; 95\% CI, except 90\% CI for the equivalence family); $P$, two-sided bootstrap $P$; $P_{\text{Holm}}$, Holm-adjusted within its family. Equivalence margin $\pm$0.02.}
+\label{tab:perf}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccccc}
+\toprule
+Model & AUROC (95\% CI) & AUPRC & Brier & Sens. & Spec. & Referred & Slope (95\% CI) & $\Delta$AUROC (95\% CI) & $P$ & $P_{\text{Holm}}$ \\
+\midrule
+\textbf{Full model (LR, 35 predictors)} & \textbf{0.869 (0.831--0.904)} & \textbf{0.335} & \textbf{0.038} & \textbf{0.802} & \textbf{0.791} & \textbf{23.8\%} & \textbf{1.00 (0.85--1.18)} & -- & -- & -- \\
+\addlinespace\multicolumn{11}{l}{\textit{Primary comparison}} \\
+OST & 0.841 (0.796--0.883) & 0.280 & 0.040 & 0.823 & 0.717 & 30.9\% & 0.98 (0.79--1.20) & 0.028 (0.007--0.052) & 0.014 & -- \\
+\addlinespace\multicolumn{11}{l}{\textit{Secondary comparisons (Holm-adjusted within family)}} \\
+LR: age, weight, sex & 0.851 (0.808--0.890) & 0.312 & 0.039 & 0.781 & 0.783 & 24.4\% & 1.04 (0.86--1.28) & 0.018 ($-$0.001 to 0.039) & 0.070 & 0.21 \\
+SCORE & 0.841 (0.799--0.879) & 0.263 & 0.040 & 0.833 & 0.725 & 30.2\% & 1.04 (0.87--1.25) & 0.029 (0.003--0.055) & 0.028 & 0.11 \\
+ORAI & 0.791 (0.742--0.834) & 0.177 & 0.042 & 0.750 & 0.735 & 28.8\% & 0.93 (0.75--1.11) & 0.078 (0.047--0.115) & 0.001 & 0.005 \\
+Boruta + XGBoost pipeline & 0.856 (0.820--0.892) & 0.295 & 0.039 & 0.844 & 0.680 & 34.5\% & 1.04 (0.89--1.24) & 0.013 ($-$0.007 to 0.030) & 0.18 & 0.27 \\
+Full model without race & 0.863 (0.825--0.898) & 0.325 & 0.038 & 0.792 & 0.798 & 23.1\% & 1.00 (0.84--1.19) & 0.006 ($-$0.001 to 0.012) & 0.14 & 0.27 \\
+\addlinespace\multicolumn{11}{l}{\textit{Tuned ML families vs LR: equivalence (90\% CI, margin $\pm$0.02; Holm-adjusted within family)}} \\
+LR-spline & 0.869 (0.832--0.903) & 0.320 & 0.038 & 0.802 & 0.793 & 23.6\% & 1.06 (0.91--1.25) & 0.000 ($-$0.008 to 0.007) & 0.94 & 1.00 \\
+SVM & 0.870 (0.832--0.906) & 0.367 & 0.037 & 0.740 & 0.835 & 19.2\% & 1.03 (0.87--1.22) & $-$0.001 ($-$0.010 to 0.009) & 0.87 & 1.00 \\
+Random forest & 0.862 (0.823--0.900) & 0.313 & 0.038 & 0.812 & 0.742 & 28.4\% & 1.04 (0.87--1.24) & 0.007 ($-$0.008 to 0.020) & 0.40 & 1.00 \\
+XGBoost & 0.868 (0.834--0.901) & 0.320 & 0.038 & 0.771 & 0.828 & 20.0\% & 1.04 (0.90--1.22) & 0.001 ($-$0.010 to 0.012) & 0.88 & 1.00 \\
+LightGBM & 0.867 (0.832--0.902) & 0.325 & 0.038 & 0.802 & 0.745 & 28.1\% & 1.06 (0.92--1.26) & 0.002 ($-$0.010 to 0.012) & 0.83 & 1.00 \\
+CatBoost & 0.867 (0.830--0.905) & 0.333 & 0.038 & 0.823 & 0.741 & 28.6\% & 1.07 (0.92--1.26) & 0.002 ($-$0.011 to 0.013) & 0.86 & 1.00 \\
+Stacking & 0.872 (0.836--0.908) & 0.338 & 0.038 & 0.812 & 0.769 & 25.8\% & 1.04 (0.89--1.24) & $-$0.003 ($-$0.012 to 0.006) & 0.51 & 1.00 \\
+\addlinespace\multicolumn{11}{l}{\textit{Descriptive (not part of a comparison family)}} \\
+Short form (10 predictors, no blood test) & 0.852 (0.810--0.887) & 0.310 & 0.039 & 0.812 & 0.751 & 27.6\% & 0.96 (0.80--1.17) & 0.018 & 0.018 & -- \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{fig3_roc.png}
+\caption{Receiver operating characteristic curves in the temporal validation set (2017--2018) for the full model and the five simple or published benchmarks (ORAI and SCORE dotted).}
+\label{fig:roc}
+\end{figure}
+
+Weighted to the 2017--2018 survey population, AUROCs were slightly higher and ranked the models similarly: 0.889 (95\% CI 0.835--0.937) for the full model, 0.870 for the three-variable model, 0.868 for OST, 0.860 for SCORE and 0.819 for ORAI (Supplementary Table~\ref{tab:weighted}). After additional adjustment for DXA non-response (77.5\% of eligible participants had a DXA result), the AUROC of the full model was 0.872 (0.812--0.934), against 0.856 for the three-variable model and 0.849 for OST; its difference from OST was 0.023 ($-$0.003 to 0.051). Weighted observed and predicted prevalence were 4.2\% and 4.1\%. Because the adjustment uses only a few observed characteristics, these estimates indicate, rather than establish, performance in the US population aged 50 or older.
+
+\subsection{Internal--external validation across cycles}
+When each cycle was held out in turn, the full model's AUROC ranged from 0.841 (2013--2014) to 0.917 (2005--2006) and exceeded both OST and the three-variable model in every cycle (Table~\ref{tab:iecv}). The pooled gain over OST was 0.025 (95\% CI 0.015--0.034; 95\% prediction interval 0.009--0.041) and over the three-variable model 0.019 (0.010--0.028; prediction interval 0.004--0.034), with little heterogeneity between cycles ($I^2$ 0\% and 3\%). Calibration slopes ranged from 0.81 to 1.24. These estimates use far more events (439) than the single temporal split, and agree with it in direction and size.
+
+\begin{table}[!htbp]
+\centering
+\caption{Internal--external cross-validation: each cycle held out in turn, with models developed on the other four cycles. $\Delta$, full model minus comparator (paired bootstrap 95\% CI). Pooled estimates from a DerSimonian--Laird random-effects model; single AUROCs pooled with Hanley--McNeil standard errors. The 2017--2018 row is the main temporal validation.}
+\label{tab:iecv}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrcccccc}
+\toprule
+ & & & \multicolumn{3}{c}{AUROC} & & & \\
+\cmidrule(lr){4-6}
+Held-out cycle & $n$ & Cases & Full model & Age, weight, sex & OST & $\Delta$ vs OST (95\% CI) & $\Delta$ vs age, weight, sex (95\% CI) & Slope \\
+\midrule
+2005--2006 & 1,422 & 65 & 0.917 & 0.910 & 0.900 & 0.017 ($-$0.003 to 0.040) & 0.007 ($-$0.008 to 0.022) & 1.11 \\
+2007--2008 & 2,090 & 84 & 0.900 & 0.873 & 0.867 & 0.034 (0.010--0.058) & 0.028 (0.006--0.049) & 1.24 \\
+2009--2010 & 2,164 & 100 & 0.878 & 0.853 & 0.858 & 0.020 (0.003--0.038) & 0.025 (0.008--0.040) & 0.93 \\
+2013--2014 & 1,973 & 94 & 0.841 & 0.811 & 0.808 & 0.033 (0.006--0.063) & 0.029 (0.005--0.058) & 0.81 \\
+2017--2018 & 2,008 & 96 & 0.869 & 0.851 & 0.841 & 0.028 (0.007--0.052) & 0.018 ($-$0.001 to 0.039) & 1.00 \\
+\midrule
+Pooled (random effects) & 9,657 & 439 & 0.882 & 0.861 & 0.856 & 0.025 (0.015--0.034) & 0.019 (0.010--0.028) & \\
+95\% prediction interval & & & 0.817--0.947 & & & 0.009--0.041 & 0.004--0.034 & \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Comparison with OST cut-offs}
+At OST's commonly used cut-offs, the full model detected slightly more cases at the same referral rate, with similar specificity (Table~\ref{tab:ost}). At the referral rate of OST $<2$ (39.1\% of participants), it detected 86 rather than 83 of the 96 cases (3 more, 95\% CI $-$2 to 8); at the referral rate of OST $<-1$ (14.9\%), 68 rather than 62 (6 more, $-$2 to 14). By sex, the full model exceeded OST by 0.019 ($-$0.005 to 0.046) in women and 0.020 ($-$0.031 to 0.068) in men (Supplementary Table~\ref{tab:ostsex}). In men, OST $<-1$ detected 12 of 24 cases (sensitivity 0.500) while referring 11.2\%, and OST $<2$ detected 20 of 24 (0.833) while referring 32.2\%.
+
+\begin{table}[!htbp]
+\centering
+\caption{OST at its published cut-offs (no fitting) versus the full model at a threshold referring the same proportion of participants (temporal validation set, 96 cases). Additional cases: full model minus OST, with 95\% bootstrap CI.}
+\label{tab:ost}
+\small
+\begin{tabular}{llcccc}
+\toprule
+Referral rate & Rule & Cases detected & Sensitivity & Specificity & Additional cases \\
+\midrule
+39.1\% & OST $<2$ & 83 & 0.865 & 0.633 & \\
+ & Full model & 86 & 0.896 & 0.634 & 3 ($-$2 to 8) \\
+\addlinespace
+14.9\% & OST $<-1$ & 62 & 0.646 & 0.876 & \\
+ & Full model & 68 & 0.708 & 0.879 & 6 ($-$2 to 14) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Operating points}
+The choice of threshold mattered more than the choice of model (Supplementary Table~\ref{tab:ops}). A threshold set for 90\% sensitivity in the development set (predicted risk 2.3\%) detected 86 of 96 cases (0.896) in validation while referring 39.3\% of participants, close to the referral rate of OST $<2$ (39.1\%), which detected 83. The Youden threshold (4.8\%) referred 23.8\% and detected 77 cases, and a 10\% threshold referred 12.0\% with a PPV of 0.261.
+
+\subsection{Calibration and clinical utility}
+The full model was well calibrated internally with cross-fitted recalibration (slope 0.99, intercept 0.00) and in temporal validation (slope 1.00, 95\% CI 0.85--1.18; Brier score 0.038) (Figure~\ref{fig:cal}). Predictions above 0.35 (1.7\% of participants) lie outside the plotted range. The model slightly underestimated risk in 2017--2018 (calibration-in-the-large 0.09, 95\% CI $-0.17$ to 0.29), as did recalibrated OST (0.15), ORAI (0.13), SCORE (0.13) and the three-variable model (0.16); none of these intercepts differed significantly from 0.
+
+The full model, the three-variable model and Boruta + XGBoost had higher net benefit than referring everyone or no one at every threshold from 0.01 to 0.40; recalibrated OST did not at a threshold of 0.01 (Figure~\ref{fig:dca}). ORAI had the lowest net benefit of all models at each tabulated threshold (0.05--0.20). Differences between models were small relative to their uncertainty (Supplementary Table~\ref{tab:nb}). At a threshold of 0.10, net benefit was 0.022 (95\% CI 0.015--0.030) for the full model and 0.018 (0.011--0.026) for recalibrated OST; per 100 people screened, the full model identified 3.14 true positives with 8.86 false positives, and OST 2.84 and 9.11.
+
+\begin{figure}[!htbp]
+\centering
+\begin{minipage}{0.46\textwidth}\centering
+\includegraphics[width=\linewidth]{fig4_calibration.png}
+\caption{Calibration of the full model: deciles of predicted risk internally (cross-fitted) and in temporal validation, and a loess curve for the validation set with a 95\% bootstrap band (200 replicates); dashed line, perfect calibration. The axes stop at 0.35 (98th percentile of predictions). Lower panel: predicted risks of participants without (up) and with (down, counts $\times$10) osteoporosis.}
+\label{fig:cal}
+\end{minipage}\hfill
+\begin{minipage}{0.52\textwidth}\centering
+\includegraphics[width=\linewidth]{fig5_decision_curve.png}
+\caption{Decision curves in the temporal validation set (OST, ORAI and SCORE recalibrated to probabilities).}
+\label{fig:dca}
+\end{minipage}
+\end{figure}
+
+\subsection{Incremental value of predictor groups}
+Age, weight and sex alone gave a temporal-validation AUROC of 0.851 (Table~\ref{tab:incr}). No further group of predictors produced a change whose 95\% CI excluded zero; the largest single gain was 0.007, from other body measures and socio-demographic factors. All 32 predictors added to age, weight and sex together raised the AUROC by 0.018.
+
+\begin{table}[!htbp]
+\centering
+\caption{Incremental value of predictor groups in nested logistic models. CV, 5-fold cross-validation in the development set; temporal, 2017--2018 validation set. $\Delta$AUROC compares each model with the previous row (paired bootstrap 95\% CI and $P$).}
+\label{tab:incr}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccc}
+\toprule
+Predictors & $k$ & CV AUROC & Temporal AUROC (95\% CI) & AUPRC & $\Delta$AUROC (95\% CI) & $P$ \\
+\midrule
+Age, weight, sex & 3 & 0.856 & 0.851 (0.808--0.890) & 0.312 & -- & -- \\
++ other body measures, socio-demographics & 8 & 0.864 & 0.858 (0.816--0.894) & 0.332 & 0.007 ($-$0.005 to 0.018) & 0.21 \\
++ clinical risk factors and history & 21 & 0.869 & 0.859 (0.819--0.894) & 0.318 & 0.001 ($-$0.010 to 0.012) & 0.85 \\
++ laboratory tests & 31 & 0.872 & 0.863 (0.825--0.898) & 0.325 & 0.005 ($-$0.002 to 0.011) & 0.17 \\
++ race/ethnicity & 35 & 0.877 & 0.869 (0.831--0.904) & 0.335 & 0.006 ($-$0.001 to 0.012) & 0.14 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Subgroup performance and fairness}
+At the global threshold, sensitivity was 0.847 in women (61 of 72 cases) but 0.667 in men (16 of 24) (Table~\ref{tab:fair}). Discrimination within each sex was similar (AUROC 0.853 and 0.820, with overlapping CIs). Sensitivity rose with age, from 0.656 at 50--64 years to 0.931 at 80 years or older, and adults aged 80 or older were slightly under-predicted (mean predicted risk 12.9\% vs observed 14.5\%).
+
+The two remedies had modest effects:
+\begin{itemize}
+\item \textbf{Sex-specific thresholds} were 6.7\% for women and 3.5\% for men, against a global threshold of 4.8\%. For men, sensitivity rose from 0.667 to 0.750 (18 of 24 cases) and referrals from 13.6\% to 17.9\%. For women, referrals fell from 37.4\% to 29.4\%, and sensitivity from 0.847 to 0.819 (59 of 72 cases). Overall, sex-specific thresholds detected the same 77 cases as the global threshold while referring fewer participants (458 vs 477; 22.8\% vs 23.8\%), shifting two detected cases from women to men.
+\item \textbf{Removing race} reduced the AUROC slightly (0.863 vs 0.869). It shifted predicted risk towards the pooled average: risk was over-predicted in non-Hispanic Black adults (3.2\% predicted vs 1.4\% observed, against 2.1\% with race) and under-predicted in non-Hispanic white adults (5.5\% vs 7.1\%, against 6.3\%).
+\end{itemize}
+Non-Hispanic Asian adults had a high prevalence (7.3\%, 20 cases) and the model discriminated well in them (AUROC 0.904, 0.840--0.955; sensitivity 0.900), although it under-predicted their risk slightly (6.0\%); the model refitted without them performed similarly (0.861; Supplementary Table~\ref{tab:sens}). The other racial and ethnic subgroups had 4--8 cases each, and their sensitivity estimates were very imprecise (for example, 0.571, 95\% CI 0.143--1.000, from 7 cases in non-Hispanic Black adults), so no conclusions about differences in detection between these groups can be drawn.
+
+\begin{table}[!htbp]
+\centering
+\caption{Performance of the full model by subgroup in the temporal validation set, at the global threshold (4.8\%). Pred., mean predicted risk. 95\% bootstrap CIs. The last three columns show the race-free model at its own threshold (5.2\%). In the models, non-Hispanic Asian adults are part of the other/multiracial category (see Methods).}
+\label{tab:fair}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrcccccccc}
+\toprule
+ & & & & \multicolumn{4}{c}{Full model} & \multicolumn{3}{c}{Race-free model} \\
+\cmidrule(lr){5-8}\cmidrule(lr){9-11}
+Subgroup & $n$ & Cases & Prev. & Pred. & AUROC (95\% CI) & Sensitivity (95\% CI) & Spec. & Pred. & AUROC & Sens. \\
+\midrule
+Women & 858 & 72 & 8.4\% & 7.2\% & 0.853 (0.811--0.894) & 0.847 (0.754--0.922) & 0.669 & 7.3\% & 0.847 & 0.847 \\
+Men & 1,150 & 24 & 2.1\% & 2.4\% & 0.820 (0.733--0.899) & 0.667 (0.468--0.850) & 0.876 & 2.5\% & 0.816 & 0.625 \\
+\addlinespace
+Age 50--64 & 1,157 & 32 & 2.8\% & 2.7\% & 0.861 (0.790--0.924) & 0.656 (0.500--0.818) & 0.864 & 2.7\% & 0.849 & 0.625 \\
+Age 65--79 & 651 & 35 & 5.4\% & 5.0\% & 0.855 (0.787--0.912) & 0.829 (0.696--0.944) & 0.752 & 5.2\% & 0.847 & 0.829 \\
+Age $\ge$80 & 200 & 29 & 14.5\% & 12.9\% & 0.793 (0.696--0.882) & 0.931 (0.833--1.000) & 0.450 & 13.0\% & 0.800 & 0.931 \\
+\addlinespace
+Non-Hispanic white & 718 & 51 & 7.1\% & 6.3\% & 0.851 (0.799--0.897) & 0.824 (0.717--0.917) & 0.736 & 5.5\% & 0.855 & 0.804 \\
+Non-Hispanic Black & 485 & 7 & 1.4\% & 2.1\% & 0.782 (0.570--0.930) & 0.571 (0.143--1.000) & 0.874 & 3.2\% & 0.776 & 0.571 \\
+Mexican American & 231 & 8 & 3.5\% & 2.7\% & 0.816 (0.674--0.956) & 0.500 (0.143--0.889) & 0.883 & 3.7\% & 0.803 & 0.625 \\
+Other Hispanic & 217 & 6 & 2.8\% & 3.8\% & 0.963 (0.930--0.987) & 1.000 (1.000--1.000) & 0.806 & 3.8\% & 0.957 & 1.000 \\
+Non-Hispanic Asian & 275 & 20 & 7.3\% & 6.0\% & 0.904 (0.840--0.953) & 0.900 (0.750--1.000) & 0.698 & 5.8\% & 0.904 & 0.850 \\
+Other/multiracial (non-Asian) & 82 & 4 & 4.9\% & 3.9\% & 0.821 (0.450--0.988) & 0.750 (0.000--1.000) & 0.744 & 3.8\% & 0.814 & 0.750 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Clinical strata}
+In women aged 65 or older, the group for whom screening is routinely recommended (45 cases), the full model's AUROC was 0.836, against 0.811 for OST, 0.811 for the three-variable model, 0.807 for SCORE and 0.783 for ORAI (Table~\ref{tab:strata}); the difference from OST was 0.025 ($-$0.019 to 0.068). Because prevalence is high in this group, OST $<2$ referred 71.1\% of these women to detect 42 cases, whereas the full model at its global threshold referred 55.0\% and detected 43. In women aged 50--64 (27 cases), SCORE had the highest AUROC (0.838 vs 0.818 for the full model). In men aged 50--69, the full model exceeded OST by 0.080 (0.013--0.152), but this estimate rests on only 9 cases; in men aged 70 or older (15 cases), the models were similar, and OST $<2$ detected more cases than the full model at its global threshold (14 vs 10) by referring twice as many men (59.8\% vs 30.3\%). None of these stratum-specific comparisons was part of the testing hierarchy.
+
+\begin{table}[!htbp]
+\centering
+\caption{Performance in clinical strata of the temporal validation set. AUROC of each model; $\Delta$, full model minus OST (paired bootstrap 95\% CI). The last two columns give cases detected and the proportion referred by the full model at its global Youden threshold (4.8\%) and by OST $<2$ (no fitting). Exploratory; not part of the testing hierarchy.}
+\label{tab:strata}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrcccccccc}
+\toprule
+ & & & \multicolumn{5}{c}{AUROC} & & \multicolumn{2}{c}{Detected, referred} \\
+\cmidrule(lr){4-8}\cmidrule(lr){10-11}
+Stratum & $n$ & Cases & Full & Age, weight, sex & OST & SCORE & ORAI & $\Delta$ vs OST (95\% CI) & Full model & OST $<2$ \\
+\midrule
+Women 50--64 years & 547 & 27 & 0.818 & 0.804 & 0.804 & 0.838 & 0.749 & 0.014 ($-$0.030 to 0.065) & 18/27, 27.4\% & 21/27, 35.5\% \\
+Women $\ge$65 years & 311 & 45 & 0.836 & 0.811 & 0.811 & 0.807 & 0.783 & 0.025 ($-$0.019 to 0.068) & 43/45, 55.0\% & 42/45, 71.1\% \\
+Men 50--69 years & 787 & 9 & 0.813 & 0.733 & 0.734 & 0.751 & 0.787 & 0.080 (0.013--0.152) & 6/9, 5.8\% & 6/9, 19.4\% \\
+Men $\ge$70 years & 363 & 15 & 0.741 & 0.732 & 0.733 & 0.756 & 0.629 & 0.008 ($-$0.074 to 0.100) & 10/15, 30.3\% & 14/15, 59.8\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Predictor importance and short form}
+In the development sample, the most important predictors by mean absolute SHAP value were the body-size measures (BMI, weight, height and waist), postmenopausal status and age (Figure~\ref{fig:shap}; Supplementary Table~\ref{tab:shapimp}), followed by hormone use, non-Hispanic Black ethnicity, PIR and prior fracture; no laboratory test ranked in the top ten. Dependence and individual-level plots are shown in Supplementary Figures~\ref{fig:dep} and~\ref{fig:waterfall}. Because the body-size measures are strongly correlated, their individual contributions should be interpreted together.
+
+The short form used weight, postmenopausal status, age, height, waist circumference, female hormone use, prior fracture, arthritis, cancer and stroke, all available at a clinic visit without a blood test. It achieved an AUROC of 0.852 (0.810--0.887; calibration slope 0.96), lower than the full model (difference 0.018; $P=0.018$). It performed similarly to the three-variable model (difference 0.000, $-$0.013 to 0.014) and was not significantly better than OST (0.010, $-$0.007 to 0.028). At its development threshold (4.0\%) it referred 27.6\% of participants and detected 78 of 96 cases. Its AUROC was 0.835 in women and 0.800 in men, in each case within 0.001 of the three-variable model and OST in that sex; its sensitivity was 0.889 in women and 0.583 in men (14 of 24 cases) (Supplementary Table~\ref{tab:sfsex}). Table~\ref{tab:eq} gives its equation. The negative coefficients for arthritis and cancer reflect associations conditional on body size and age in these data, and should not be interpreted causally.
+
+\begin{table}[!htbp]
+\centering
+\caption{Short-form equation (penalised logistic regression, recalibrated). Predicted probability $=1/(1+e^{-\eta})$, where $\eta$ is the intercept plus the sum of each coefficient multiplied by the predictor value. Units: weight in kg, age in years (capped at 80), height and waist in cm; binary predictors 1 = yes, 0 = no (postmenopausal and hormone use are 0 for men). Coefficients of correlated body-size measures are not individually interpretable. Development-set Youden threshold 4.0\%.}
+\label{tab:eq}
+\small
+\begin{tabular}{lcc}
+\toprule
+Term & Coefficient & Odds ratio per unit \\
+\midrule
+Intercept & $-$3.43385 &  \\
+Weight & $-$0.09585 & 0.909 \\
+Postmenopausal & 0.97643 & 2.655 \\
+Age & 0.07253 & 1.075 \\
+Height & $-$0.00161 & 0.998 \\
+Waist & 0.02118 & 1.021 \\
+Ever used female hormones & $-$0.83012 & 0.436 \\
+Prior hip, wrist or spine fracture & 1.08190 & 2.950 \\
+Arthritis & $-$0.22820 & 0.796 \\
+Cancer & $-$0.30003 & 0.741 \\
+Stroke & 0.69766 & 2.009 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.64\textwidth]{fig6_shap_beeswarm.png}
+\caption{SHAP beeswarm summary for the full model in 500 development-set participants (the sample used for importance ranking). Colour indicates the predictor value; horizontal position indicates its effect on predicted risk (probability scale, before recalibration).}
+\label{fig:shap}
+\end{figure}
+
+\subsection{Sensitivity analyses}
+The conclusions did not change in any sensitivity analysis (Supplementary Table~\ref{tab:sens}). Including the lumbar spine raised prevalence in the development set to 7.2\% (complete scans only) and 8.4\% (spine from at least two vertebrae), and in the validation set to 6.7\% and 8.2\%. For these outcomes the full model achieved AUROCs of 0.846 and 0.840, against 0.823 and 0.801 for OST and 0.836 and 0.824 for the three-variable model. With diagnosed or treated participants included, the AUROCs were 0.859, 0.824 and 0.839. Refitting without non-Hispanic Asian participants (0.861), on 2013--2014 alone (0.854), without the 2005--2006 cycle (0.869), without laboratory predictors (0.863) or without alcohol (0.869) made little difference. Across the versions of the analysis that included these benchmarks (versions 2--6), the gain of the best model over OST was between 0.028 and 0.045, and over the three-variable model between 0.017 and 0.030 (Supplementary Table~\ref{tab:versions}).
+
+% ================================================================= 4 Discussion
+\section{Discussion}
+
+\subsection{Principal findings}
+In 9,657 older US adults neither diagnosed with nor treated for osteoporosis, a penalised logistic regression using 35 history, examination and laboratory predictors identified hip osteoporosis with an AUROC of 0.869 in a later survey cycle, with good calibration. When every model family was tuned with the same budget, SVM, random forest, three gradient-boosting methods, stacking and spline regression all performed within 0.01 of logistic regression, and six of the seven were formally equivalent to it. The full model exceeded OST by 0.028 in the temporal validation and by 0.025 when pooled across five held-out cycles, but the temporal CI included zero once uncertainty from refitting was considered. It clearly exceeded ORAI, but not SCORE or a three-variable model of age, weight and sex after adjustment. A short form using only clinically obtainable, race-free predictors performed like age, weight and sex. A single threshold detected two-thirds of cases in men.
+
+\subsection{How much do additional predictors and machine learning add?}
+Most of the discriminative information was captured by age, weight and sex. OST, which uses only two of these, reached an AUROC of 0.841 without any model fitting, as did SCORE; ORAI, which groups age and weight into coarse bands, performed worse (0.791). No further group of predictors made a clear difference on its own, and together they added 0.018. This agrees with evidence that, for tabular clinical data with modest numbers of predictors, ML rarely outperforms logistic regression \cite{christodoulou2019}. The relationships here are largely monotonic and additive, so flexible models have little additional structure to exploit; spline terms added nothing either.
+
+Equal tuning was important for this conclusion. With default settings, the best configuration of each ML family trailed LR by up to 0.035 in cross-validated AUROC (SVM), which could have been misread as evidence that ML is worse; with tuning, all families converged. Tuned boosting models chose stumps or two-leaf trees, effectively additive models, which is further evidence that these data contain little interaction structure. Conversely, comparing a tuned ML model with an untuned regression could exaggerate the value of ML.
+
+Our analyses do not exclude modest gains, and they bound them. Over OST, the temporal validation is compatible with differences in AUROC from about 0 to 0.05, and the internal--external validation, which uses all 439 cases, gives a narrower range of 0.015--0.034. At OST's referral rates this corresponds to detecting a few more of the 96 cases (3 and 6 more in our data, with CIs that include 2 fewer). Whether such a gain justifies a tool that needs 35 inputs, including blood tests, depends on the setting; in most settings, we think it would not. Among the simple indices, OST and SCORE performed similarly overall, and SCORE did best in women aged 50--64, but it needs rheumatoid arthritis and fracture history, which are less reliably recorded than age and weight. We did not evaluate FRAX calculated without BMD, which estimates fracture probability rather than low BMD.
+
+\subsection{Comparison with the published study}
+Zhang et al.\ reported their results mainly as accuracy \cite{zhang2025}. In our re-implementation, all 12 feature-selection and classifier combinations had an accuracy of 0.954--0.957, including SVMs with AUROC as low as 0.653, each close to the no-information rate of 95.5\%. Their outcome definition and population differ from ours, so their figures cannot be compared directly with ours, but our results show that accuracy cannot rank osteoporosis models when the condition is uncommon. On temporal validation, a tuned Boruta + XGBoost pipeline (0.856) performed similarly to the three-variable model, so feature selection followed by a flexible learner added complexity without measurable benefit.
+
+\subsection{Class imbalance and calibration}
+Class-imbalance corrections improved discrimination only for untuned SVM and, slightly, for random forest, and SMOTE lowered the AUPRC of every tree-based model. Class weighting and resampling inflated predicted risks, roughly quadrupling the Brier score of LR until recalibration removed the difference. This is consistent with van den Goorbergh et al.\ \cite{vandengoorbergh2022}. When valid absolute risks are needed, models should be fitted on the original class distribution, with a decision threshold chosen for the intended use.
+
+\subsection{Thresholds}
+The Youden threshold is a statistical convention, not a clinical choice. For screening, where missing a case usually costs more than an unnecessary DXA, a lower threshold is often preferable. In our data, a threshold chosen for 90\% sensitivity in development transferred well to validation (0.896) and referred 39\% of participants, as many as OST $<2$, detecting 86 cases against 83 for OST. The operating point should be chosen locally, from the referral capacity and the relative costs of missed and unnecessary scans, and Table~\ref{tab:ops} and the decision curves provide the information to do so.
+
+\subsection{Subgroups and fairness}
+The model ranked men about as well as women (AUROC 0.820 vs 0.853), but a single threshold detected only 16 of 24 cases in men, reflecting their low baseline risk. Sex-specific Youden thresholds raised sensitivity in men to 0.750 and lowered referrals in women, detecting the same total number of cases with fewer referrals; raising detection in men further would require a deliberately lower threshold and more referrals, a policy choice about the value of finding osteoporosis in men, who are already under-screened \cite{uspstf2018}. OST behaved similarly: at its stricter cut-off it detected only half of the cases in men.
+
+In women aged 65 or older, for whom DXA is recommended regardless of risk scores \cite{uspstf2018}, a tool is useful mainly for ordering patients when capacity is limited; there the full model detected as many cases as OST $<2$ with fewer referrals, but with 45 cases this is a hypothesis rather than a finding. The strata where a tool would decide who is scanned at all, younger postmenopausal women and men, had 9--27 cases each, too few to choose between tools.
+
+Removing race/ethnicity changed discrimination little but miscalibrated risk within groups: it over-predicted risk in non-Hispanic Black adults, whose observed prevalence was low, and under-predicted it in white adults. This illustrates the trade-off between calibration within groups and race-free prediction \cite{obermeyer2019,vyas2020}. The other/multiracial category changed composition over time, as non-Hispanic Asian adults were oversampled from 2011; the model nevertheless discriminated well in Asian adults, and results without them were similar. With only 4--8 cases in each other minority group, our data cannot show whether either model detects osteoporosis less well in a particular group.
+
+\subsection{Implementation considerations}
+For a tool to be used in practice, its inputs must be available where decisions are made. Age, sex, weight and height are recorded at almost every primary-care visit and are routinely stored in electronic health records (EHRs), which is why OST and the three-variable model can be computed automatically for every eligible patient. The short form adds waist circumference, menopausal status, hormone use, prior fracture and three common diagnoses. These are less consistently coded in EHRs, and in our data they added nothing measurable. The full model also needs a biochemistry panel and vitamin D, which are available only for patients who happen to have been tested, and PIR, which is rarely recorded at all.
+
+Any of these models can be implemented as a single linear equation in an EHR or a spreadsheet, at negligible cost (Table~\ref{tab:eq}, Supplementary Table~\ref{tab:coef}). Gradient-boosting models cannot be written in this way, and would need software integration and version control for no gain in performance. The main cost of screening lies in the DXA scans triggered, not in the tool, so the choice of threshold has far larger resource implications than the choice of model. For health systems that already use OST, our results suggest that replacing it with an ML model would bring little benefit, whereas choosing an appropriate threshold, and applying it to men as well as women, could matter more.
+
+\subsection{Strengths and limitations}
+This study has several strengths:
+\begin{itemize}
+\item a large sample with standardised DXA from a national probability survey, restricted to the intended screening population of undiagnosed, untreated adults;
+\item a hip-based outcome with stable prevalence across cycles, and spine-inclusive and scanner-restricted sensitivity analyses;
+\item a temporal validation cycle, supported by internal--external validation across all five cycles and a bootstrap including model refitting;
+\item equal tuning of every model family over wide search spaces, and direct comparison with three established screening indices, including OST's cut-offs overall, by sex and in guideline-defined strata;
+\item leakage-safe imputation, resampling and predictor selection;
+\item assessment of discrimination, calibration and net benefit with confidence intervals, an explicit testing hierarchy with equivalence testing, survey weighting and non-response adjustment;
+\item explicit reporting of subgroup event counts and uncertainty;
+\item published model equations, a record of every analysis version, and full reproducibility from public data and open code.
+\end{itemize}
+
+The study also has limitations:
+\begin{enumerate}
+\item \textbf{Cross-sectional design.} The model detects existing osteoporosis; it does not predict fractures. We did not compare it with FRAX, which estimates fracture probability rather than BMD.
+\item \textbf{Analysis revisions.} The outcome definition and the cohort were revised, and the testing hierarchy, the ORAI and SCORE benchmarks and the internal--external validation were added, after the validation data had been examined in earlier versions of this analysis. All revisions were made for stated methodological reasons, and the results of every version are reported (Supplementary Table~\ref{tab:versions}), but the temporal validation is not strictly untouched and the hierarchy was not prespecified.
+\item \textbf{Hip-only primary outcome.} Excluding the spine underestimates osteoporosis as defined clinically, where the lowest T-score at any site is used. NCHS reported an age-adjusted prevalence of 12.6\% at the femoral neck or lumbar spine in 2017--2018 \cite{sarafrazi2021}, including people already diagnosed; our figures were lower because of the hip-only definition and the exclusion of diagnosed and treated participants.
+\item \textbf{Cross-cycle measurement changes.} DXA scanners, laboratory methods and the alcohol questionnaire changed between periods, and mean femoral neck BMD in women was about 0.15 SD lower after the scanner change. Results without laboratory predictors or alcohol, and with development restricted to the same scanner type, were similar.
+\item \textbf{Self-reported information.} Risk factors and prior diagnosis were self-reported; a missing answer to the diagnosis question was treated as not diagnosed; prior fractures were of any cause; glucocorticoid use was recorded as ever rather than current use; and postmenopausal status was approximated from the absence of regular periods, which also captures hysterectomy and is nearly collinear with sex in older adults.
+\item \textbf{Comparator re-implementation.} The Boruta + XGBoost pipeline was applied to our candidate predictors and outcome, because the published feature set was unavailable. ORAI and SCORE were derived in women and were applied here to both sexes; ORAI used ever rather than current estrogen use, and SCORE used fractures of any cause at the hip, wrist and spine rather than non-traumatic wrist, rib and hip fractures, which may understate their performance.
+\item \textbf{Survey design.} Models were fitted without survey weights. Our non-response adjustment used only a few observed characteristics, and participants without DXA were heavier and more often women and non-Hispanic Black, so the cohort may not fully represent the US population aged 50 or older.
+\item \textbf{Uncertainty.} With 96 validation events, differences of a few hundredths in AUROC cannot be excluded or confirmed from the temporal split alone. Most CIs reflect sampling of the validation set only; the refit bootstrap, which also reflects model fitting, kept hyperparameters fixed and used 200 replicates. Internal estimates are slightly optimistic because tuning and selection used the same folds. Men, younger women and minority racial and ethnic groups had few cases, limiting subgroup inference.
+\item \textbf{US population only.} External validation is needed, including in settings where DXA access is most limited.
+\end{enumerate}
+
+\section{Conclusion}
+In older US adults neither diagnosed with nor treated for osteoporosis, a penalised logistic model using 35 clinical and laboratory predictors identified hip osteoporosis with good, temporally stable discrimination and calibration. Once tuned equally, seven ML and ensemble methods performed no better, and most were equivalent. Thirty-five predictors added about 0.02--0.03 in AUROC to OST and to age, weight and sex, a consistent but small gain, and a short form using only clinically obtainable predictors performed like age, weight and sex. For osteoporosis case-finding, simple tools capture most of the achievable discrimination; the threshold, and whether it is applied to men, matter more than the algorithm, and new models should be judged against these simple tools.
+
+
+\begin{thebibliography}{99}\small
+
+\bibitem{compston2019} Compston JE, McClung MR, Leslie WD. Osteoporosis. Lancet. 2019;393(10169):364--376. \href{https://doi.org/10.1016/S0140-6736(18)32112-3}{doi:10.1016/S0140-6736(18)32112-3}
+
+\bibitem{sarafrazi2021} Sarafrazi N, Wambogo EA, Shepherd JA. Osteoporosis or low bone mass in older adults: United States, 2017--2018. NCHS Data Brief No.\ 405. Hyattsville, MD: National Center for Health Statistics; 2021. \href{https://dx.doi.org/10.15620/cdc:103477}{doi:10.15620/cdc:103477}
+
+\bibitem{kanis1994} Kanis JA, Melton LJ 3rd, Christiansen C, Johnston CC, Khaltaev N. The diagnosis of osteoporosis. J Bone Miner Res. 1994;9(8):1137--1141. \href{https://doi.org/10.1002/jbmr.5650090802}{doi:10.1002/jbmr.5650090802}
+
+\bibitem{uspstf2018} US Preventive Services Task Force; Curry SJ, Krist AH, Owens DK, et al. Screening for osteoporosis to prevent fractures: US Preventive Services Task Force recommendation statement. JAMA. 2018;319(24):2521--2531. \href{https://doi.org/10.1001/jama.2018.7498}{doi:10.1001/jama.2018.7498}
+
+\bibitem{geusens2002} Geusens P, Hochberg MC, van der Voort DJ, Pols H, van der Klift M, Siris E, et al. Performance of risk indices for identifying low bone density in postmenopausal women. Mayo Clin Proc. 2002;77(7):629--637. \href{https://doi.org/10.4065/77.7.629}{doi:10.4065/77.7.629}
+
+\bibitem{koh2001} Koh LK, Sedrine WB, Torralba TP, et al. A simple tool to identify Asian women at increased risk of osteoporosis. Osteoporos Int. 2001;12(8):699--705. \href{https://doi.org/10.1007/s001980170070}{doi:10.1007/s001980170070}
+
+\bibitem{cadarette2000} Cadarette SM, Jaglal SB, Kreiger N, McIsaac WJ, Darlington GA, Tu JV. Development and validation of the Osteoporosis Risk Assessment Instrument to facilitate selection of women for bone densitometry. CMAJ. 2000;162(9):1289--1294.
+
+\bibitem{lydick1998} Lydick E, Cook K, Turpin J, Melton M, Stine R, Byrnes C. Development and validation of a simple questionnaire to facilitate identification of women likely to have low bone density. Am J Manag Care. 1998;4(1):37--48.
+
+\bibitem{kanis2008} Kanis JA, Johnell O, Oden A, Johansson H, McCloskey E. FRAX and the assessment of fracture probability in men and women from the UK. Osteoporos Int. 2008;19(4):385--397. \href{https://doi.org/10.1007/s00198-007-0543-5}{doi:10.1007/s00198-007-0543-5}
+
+\bibitem{zhang2025} Zhang D, Yang X, Wang F, Qiu C, Chai Y, Fang D. Comparative analysis of feature extraction methods and machine learning models for predicting osteoporosis prevalence. J Med Syst. 2025;49(1):72. \href{https://doi.org/10.1007/s10916-025-02203-1}{doi:10.1007/s10916-025-02203-1}
+
+\bibitem{vancalster2019} Van Calster B, McLernon DJ, van Smeden M, Wynants L, Steyerberg EW. Calibration: the Achilles heel of predictive analytics. BMC Med. 2019;17(1):230. \href{https://doi.org/10.1186/s12916-019-1466-7}{doi:10.1186/s12916-019-1466-7}
+
+\bibitem{vickers2006} Vickers AJ, Elkin EB. Decision curve analysis: a novel method for evaluating prediction models. Med Decis Making. 2006;26(6):565--574. \href{https://doi.org/10.1177/0272989X06295361}{doi:10.1177/0272989X06295361}
+
+\bibitem{obermeyer2019} Obermeyer Z, Powers B, Vogeli C, Mullainathan S. Dissecting racial bias in an algorithm used to manage the health of populations. Science. 2019;366(6464):447--453. \href{https://doi.org/10.1126/science.aax2342}{doi:10.1126/science.aax2342}
+
+\bibitem{vyas2020} Vyas DA, Eisenstein LG, Jones DS. Hidden in plain sight -- reconsidering the use of race correction in clinical algorithms. N Engl J Med. 2020;383(9):874--882. \href{https://doi.org/10.1056/NEJMms2004740}{doi:10.1056/NEJMms2004740}
+
+\bibitem{christodoulou2019} Christodoulou E, Ma J, Collins GS, Steyerberg EW, Verbakel JY, Van Calster B. A systematic review shows no performance benefit of machine learning over logistic regression for clinical prediction models. J Clin Epidemiol. 2019;110:12--22. \href{https://doi.org/10.1016/j.jclinepi.2019.02.004}{doi:10.1016/j.jclinepi.2019.02.004}
+
+\bibitem{vandengoorbergh2022} van den Goorbergh R, van Smeden M, Timmerman D, Van Calster B. The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression. J Am Med Inform Assoc. 2022;29(9):1525--1534. \href{https://doi.org/10.1093/jamia/ocac093}{doi:10.1093/jamia/ocac093}
+
+\bibitem{collins2024} Collins GS, Moons KGM, Dhiman P, et al. TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods. BMJ. 2024;385:e078378. \href{https://doi.org/10.1136/bmj-2023-078378}{doi:10.1136/bmj-2023-078378}
+
+\bibitem{johnson2013} Johnson CL, Paulose-Ram R, Ogden CL, et al. National Health and Nutrition Examination Survey: analytic guidelines, 1999--2010. Vital Health Stat 2. 2013;(161):1--24.
+
+\bibitem{looker1998} Looker AC, Wahner HW, Dunn WL, et al. Updated data on proximal femur bone mineral levels of US adults. Osteoporos Int. 1998;8(5):468--490. \href{https://doi.org/10.1007/s001980050093}{doi:10.1007/s001980050093}
+
+\bibitem{watts2013} Watts NB, Leslie WD, Foldes AJ, Miller PD. 2013 International Society for Clinical Densitometry Position Development Conference: Task Force on Normative Databases. J Clin Densitom. 2013;16(4):472--481. \href{https://doi.org/10.1016/j.jocd.2013.08.001}{doi:10.1016/j.jocd.2013.08.001}
+
+\bibitem{baim2008} Baim S, Binkley N, Bilezikian JP, Kendler DL, Hans DB, et al. Official Positions of the International Society for Clinical Densitometry and executive summary of the 2007 ISCD Position Development Conference. J Clin Densitom. 2008;11(1):75--91. \href{https://doi.org/10.1016/j.jocd.2007.12.007}{doi:10.1016/j.jocd.2007.12.007}
+
+\bibitem{wright2014} Wright NC, Looker AC, Saag KG, Curtis JR, Delzell ES, Randall S, Dawson-Hughes B. The recent prevalence of osteoporosis and low bone mass in the United States based on bone mineral density at the femoral neck or lumbar spine. J Bone Miner Res. 2014;29(11):2520--2526. \href{https://doi.org/10.1002/jbmr.2269}{doi:10.1002/jbmr.2269}
+
+\bibitem{vanbuuren2011} van Buuren S, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. J Stat Softw. 2011;45(3):1--67. \href{https://doi.org/10.18637/jss.v045.i03}{doi:10.18637/jss.v045.i03}
+
+\bibitem{perperoglou2019} Perperoglou A, Sauerbrei W, Abrahamowicz M, Schmid M. A review of spline function procedures in R. BMC Med Res Methodol. 2019;19(1):46. \href{https://doi.org/10.1186/s12874-019-0666-3}{doi:10.1186/s12874-019-0666-3}
+
+\bibitem{chen2016} Chen T, Guestrin C. XGBoost: a scalable tree boosting system. In: Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining; 2016:785--794. \href{https://doi.org/10.1145/2939672.2939785}{doi:10.1145/2939672.2939785}
+
+\bibitem{ke2017} Ke G, Meng Q, Finley T, et al. LightGBM: a highly efficient gradient boosting decision tree. In: Advances in Neural Information Processing Systems 30 (NIPS 2017). \url{https://proceedings.neurips.cc/paper_files/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html}
+
+\bibitem{prokhorenkova2018} Prokhorenkova L, Gusev G, Vorobev A, Dorogush AV, Gulin A. CatBoost: unbiased boosting with categorical features. In: Advances in Neural Information Processing Systems 31 (NeurIPS 2018). \url{https://proceedings.neurips.cc/paper_files/paper/2018/hash/14491b756b3a51daac41c24863285549-Abstract.html}
+
+\bibitem{chawla2002} Chawla NV, Bowyer KW, Hall LO, Kegelmeyer WP. SMOTE: synthetic minority over-sampling technique. J Artif Intell Res. 2002;16:321--357. \href{https://doi.org/10.1613/jair.953}{doi:10.1613/jair.953}
+
+\bibitem{batista2004} Batista GEAPA, Prati RC, Monard MC. A study of the behavior of several methods for balancing machine learning training data. ACM SIGKDD Explor Newsl. 2004;6(1):20--29. \href{https://doi.org/10.1145/1007730.1007735}{doi:10.1145/1007730.1007735}
+
+\bibitem{akiba2019} Akiba T, Sano S, Yanase T, Ohta T, Koyama M. Optuna: a next-generation hyperparameter optimization framework. In: Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining; 2019:2623--2631. \href{https://doi.org/10.1145/3292500.3330701}{doi:10.1145/3292500.3330701}
+
+\bibitem{rud2007} Rud B, Hilden J, Hyldstrup L, Hr\'{o}bjartsson A. Performance of the Osteoporosis Self-Assessment Tool in ruling out low bone mineral density in postmenopausal women: a systematic review. Osteoporos Int. 2007;18(9):1177--1187. \href{https://doi.org/10.1007/s00198-006-0319-3}{doi:10.1007/s00198-006-0319-3}
+
+\bibitem{kursa2010} Kursa MB, Rudnicki WR. Feature selection with the Boruta package. J Stat Softw. 2010;36(11):1--13. \href{https://doi.org/10.18637/jss.v036.i11}{doi:10.18637/jss.v036.i11}
+
+\bibitem{tibshirani1996} Tibshirani R. Regression shrinkage and selection via the lasso. J R Stat Soc Series B Stat Methodol. 1996;58(1):267--288. \href{https://doi.org/10.1111/j.2517-6161.1996.tb02080.x}{doi:10.1111/j.2517-6161.1996.tb02080.x}
+
+\bibitem{platt2000} Platt JC. Probabilities for SV machines. In: Smola AJ, Bartlett P, Sch\"olkopf B, Schuurmans D, editors. Advances in Large-Margin Classifiers. Cambridge, MA: MIT Press; 2000:61--74. \href{https://doi.org/10.7551/mitpress/1113.003.0008}{doi:10.7551/mitpress/1113.003.0008}
+
+\bibitem{youden1950} Youden WJ. Index for rating diagnostic tests. Cancer. 1950;3(1):32--35.
+
+\bibitem{delong1988} DeLong ER, DeLong DM, Clarke-Pearson DL. Comparing the areas under two or more correlated receiver operating characteristic curves: a nonparametric approach. Biometrics. 1988;44(3):837--845. \href{https://doi.org/10.2307/2531595}{doi:10.2307/2531595}
+
+\bibitem{sunxu2014} Sun X, Xu W. Fast implementation of DeLong's algorithm for comparing the areas under correlated receiver operating characteristic curves. IEEE Signal Process Lett. 2014;21(11):1389--1393. \href{https://doi.org/10.1109/LSP.2014.2337313}{doi:10.1109/LSP.2014.2337313}
+
+\bibitem{holm1979} Holm S. A simple sequentially rejective multiple test procedure. Scand J Stat. 1979;6(2):65--70.
+
+\bibitem{steyerberg2016} Steyerberg EW, Harrell FE Jr. Prediction models need appropriate internal, internal-external, and external validation. J Clin Epidemiol. 2016;69:245--247. \href{https://doi.org/10.1016/j.jclinepi.2015.04.005}{doi:10.1016/j.jclinepi.2015.04.005}
+
+\bibitem{dersimonian1986} DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177--188. \href{https://doi.org/10.1016/0197-2456(86)90046-2}{doi:10.1016/0197-2456(86)90046-2}
+
+\bibitem{hanley1982} Hanley JA, McNeil BJ. The meaning and use of the area under a receiver operating characteristic (ROC) curve. Radiology. 1982;143(1):29--36. \href{https://doi.org/10.1148/radiology.143.1.7063747}{doi:10.1148/radiology.143.1.7063747}
+
+\bibitem{chen2020} Chen TC, Clark J, Riddles MK, Mohadjer LK, Fakhouri THI. National Health and Nutrition Examination Survey, 2015--2018: sample design and estimation procedures. Vital Health Stat 2. 2020;(184):1--35.
+
+\bibitem{lundberg2017} Lundberg SM, Lee SI. A unified approach to interpreting model predictions. In: Advances in Neural Information Processing Systems 30 (NIPS 2017). \url{https://proceedings.neurips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html}
+
+\bibitem{pedregosa2011} Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: machine learning in Python. J Mach Learn Res. 2011;12(85):2825--2830. \url{https://jmlr.org/papers/v12/pedregosa11a.html}
+
+\end{thebibliography}
+
+% ================================================================= Supplementary
+\clearpage
+\appendix
+\section*{Supplementary material}
+\renewcommand{\thefigure}{S\arabic{figure}}
+\renewcommand{\thetable}{S\arabic{table}}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+
+% -------- Figure 2: workflow
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  st/.style={draw, rounded corners=2pt, align=center, text width=4.1cm, minimum height=1.25cm, font=\footnotesize, fill=blue!4, execute at begin node={\hyphenpenalty=10000}},
+  arr/.style={-{Stealth[length=2mm]}, thick},
+  node distance=0.45cm and 0.5cm]
+\node[st] (s1) {\textbf{1. Data}\\ 5 NHANES cycles; undiagnosed, untreated adults $\ge$50; hip T-score};
+\node[st, right=of s1] (s2) {\textbf{2. Temporal split}\\ develop 2005--2014; validate 2017--2018};
+\node[st, right=of s2] (s3) {\textbf{3. Model comparison}\\ 8 families $\times$ 3 imbalance strategies};
+\node[st, below=of s3] (s4) {\textbf{4. Equal tuning \& recalibration}\\ Optuna, 40 trials each; Platt};
+\node[st, left=of s4] (s5) {\textbf{5. Benchmarks}\\ OST, ORAI, SCORE; age--weight--sex LR; Boruta + XGBoost};
+\node[st, left=of s5] (s6) {\textbf{6. Temporal validation}\\ AUROC, calibration, DCA; testing hierarchy; IECV};
+\node[st, below=of s6] (s7) {\textbf{7. Incremental value \& fairness}\\ predictor groups; subgroups; clinical strata};
+\node[st, right=of s7] (s8) {\textbf{8. Sensitivity analyses}\\ spine outcomes; scanner; Asian; no labs};
+\node[st, right=of s8] (s9) {\textbf{9. Short form}\\ 10 clinical, race-free predictors; equation};
+\draw[arr] (s1) -- (s2); \draw[arr] (s2) -- (s3); \draw[arr] (s3) -- (s4);
+\draw[arr] (s4) -- (s5); \draw[arr] (s5) -- (s6); \draw[arr] (s6) -- (s7);
+\draw[arr] (s7) -- (s8); \draw[arr] (s8) -- (s9);
+\end{tikzpicture}
+\caption{Study workflow. Imputation, scaling and resampling were fitted inside cross-validation folds; the 2017--2018 cycle was used only for evaluation.}
+\label{fig:workflow}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Cross-validated performance of 24 model $\times$ imbalance-strategy configurations with default hyperparameters (all 35 predictors, 5-fold CV, development set). Brier scores are shown before (raw) and after cross-fitted Platt recalibration (recal.). The selected configuration is in bold.}
+\label{tab:compare}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccc@{\hspace{2.2em}}llcccc}
+\toprule
+ & & & & \multicolumn{2}{c}{Brier} & & & & & \multicolumn{2}{c}{Brier} \\
+\cmidrule{5-6}\cmidrule{11-12}
+Model & Strategy & AUROC & AUPRC & raw & recal. & Model & Strategy & AUROC & AUPRC & raw & recal. \\
+\midrule
+\textbf{LR} & \textbf{None} & \textbf{0.876} & \textbf{0.346} & \textbf{0.035} & \textbf{0.035} & XGBoost & None & 0.857 & 0.275 & 0.038 & 0.037 \\
+LR & Class wt & 0.872 & 0.346 & 0.137 & 0.035 & XGBoost & Class wt & 0.848 & 0.262 & 0.058 & 0.037 \\
+LR & SMOTE & 0.871 & 0.336 & 0.127 & 0.035 & XGBoost & SMOTE & 0.855 & 0.266 & 0.041 & 0.037 \\
+LR-spline & None & 0.873 & 0.339 & 0.035 & 0.035 & LightGBM & None & 0.852 & 0.275 & 0.039 & 0.037 \\
+LR-spline & Class wt & 0.870 & 0.337 & 0.133 & 0.035 & LightGBM & Class wt & 0.842 & 0.258 & 0.050 & 0.038 \\
+LR-spline & SMOTE & 0.868 & 0.331 & 0.125 & 0.036 & LightGBM & SMOTE & 0.848 & 0.267 & 0.040 & 0.037 \\
+SVM & None & 0.785 & 0.239 & 0.038 & 0.038 & CatBoost & None & 0.865 & 0.294 & 0.037 & 0.037 \\
+SVM & Class wt & 0.841 & 0.238 & 0.038 & 0.038 & CatBoost & Class wt & 0.851 & 0.299 & 0.072 & 0.037 \\
+SVM & SMOTE & 0.812 & 0.212 & 0.055 & 0.039 & CatBoost & SMOTE & 0.841 & 0.246 & 0.042 & 0.038 \\
+RF & None & 0.853 & 0.298 & 0.037 & 0.037 & Stacking & None & 0.863 & 0.302 & 0.037 & 0.038 \\
+RF & Class wt & 0.861 & 0.303 & 0.043 & 0.036 & Stacking & Class wt & 0.865 & 0.311 & 0.036 & 0.036 \\
+RF & SMOTE & 0.861 & 0.250 & 0.058 & 0.038 & Stacking & SMOTE & 0.864 & 0.270 & 0.045 & 0.038 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Hyperparameter search spaces and selected values (Optuna, tree-structured Parzen estimator, 40 trials per family, 5-fold CV AUROC in the development set). $^*$Selected value within 5\% of a search bound (3 of the tuned hyperparameters). For XGBoost depth 1 and LightGBM two leaves, the bound is the smallest possible tree (a stump); LightGBM's minimum child size of 198 lies at the upper bound and indicates strong regularisation.}
+\label{tab:hyper}
+\footnotesize
+\begin{tabular}{llll}
+\toprule
+Family & Hyperparameter & Search range (scale) & Selected \\
+\midrule
+LR & C & 0.001--100 (log) & 0.135 \\
+\addlinespace
+LR-spline & C & 0.001--100 (log) & 1.92 \\
+\addlinespace
+SVM & C & 0.01--100 (log) & 1.05 \\
+ & gamma & 1.00e-05--1 (log) & 0.00315 \\
+\addlinespace
+RF & n estimators & 200--1000 (integer, step 100) & 700 \\
+ & max depth & 3--20 (integer, step 1) & 12 \\
+ & min samples leaf & 1--60 (integer, step 1) & 27 \\
+ & max features & 0.05--1 (linear) & 0.0934 \\
+\addlinespace
+XGBoost & n estimators & 100--2000 (integer, step 50) & 1600 \\
+ & learning rate & 0.002--0.3 (log) & 0.0234 \\
+ & max depth & 1--8 (integer, step 1) & 1$^*$ \\
+ & subsample & 0.5--1 (linear) & 0.706 \\
+ & colsample bytree & 0.5--1 (linear) & 0.648 \\
+ & min child weight & 1--20 (log) & 1.4 \\
+ & reg lambda & 0.001--10 (log) & 2.9 \\
+\addlinespace
+LightGBM & n estimators & 100--2000 (integer, step 50) & 1300 \\
+ & learning rate & 0.002--0.3 (log) & 0.0165 \\
+ & num leaves & 2--64 (integer, step 1) & 2$^*$ \\
+ & min child samples & 1--200 (integer, step 1) & 198$^*$ \\
+ & subsample & 0.5--1 (linear) & 0.833 \\
+ & colsample bytree & 0.5--1 (linear) & 0.614 \\
+ & reg lambda & 0.001--10 (log) & 0.168 \\
+\addlinespace
+CatBoost & iterations & 200--2000 (integer, step 100) & 600 \\
+ & depth & 1--8 (integer, step 1) & 4 \\
+ & learning rate & 0.002--0.3 (log) & 0.0135 \\
+ & l2 leaf reg & 1--10 (log) & 5.77 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+{\small
+\begin{longtable}{rlc}
+\caption{Predictor importance: mean absolute SHAP value of the full model in 500 development-set participants (probability scale, before recalibration).}\label{tab:shapimp}\\
+\toprule
+Rank & Predictor & Mean $|$SHAP$|$ \\
+\midrule
+\endfirsthead
+\toprule
+Rank & Predictor & Mean $|$SHAP$|$ \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1 & BMI, kg/m$^2$ & 0.0236 \\
+2 & Weight, kg & 0.0189 \\
+3 & Postmenopausal & 0.0177 \\
+4 & Age, years & 0.0175 \\
+5 & Height, cm & 0.0135 \\
+6 & Waist, cm & 0.0117 \\
+7 & Ever used female hormones & 0.0085 \\
+8 & Non-Hispanic Black & 0.0068 \\
+9 & Income-to-poverty ratio & 0.0067 \\
+10 & Prior hip, wrist or spine fracture & 0.0066 \\
+11 & Mexican American & 0.0063 \\
+12 & Alkaline phosphatase, U/L & 0.0055 \\
+13 & Arthritis & 0.0042 \\
+14 & Cancer & 0.0040 \\
+15 & 25(OH) vitamin D, nmol/L & 0.0038 \\
+16 & Stroke & 0.0030 \\
+17 & Total protein, g/dL & 0.0028 \\
+18 & Creatinine, mg/dL & 0.0023 \\
+19 & Current smoker & 0.0023 \\
+20 & Albumin, g/dL & 0.0021 \\
+21 & Diabetes & 0.0020 \\
+22 & Other Hispanic & 0.0019 \\
+23 & Coronary heart disease & 0.0016 \\
+24 & Education level (1--5) & 0.0015 \\
+25 & Other/multiracial (incl.\ Asian) & 0.0014 \\
+26 & Cholesterol, mg/dL & 0.0014 \\
+27 & Uric acid, mg/dL & 0.0009 \\
+28 & Former smoker & 0.0008 \\
+29 & Parental hip fracture & 0.0008 \\
+30 & Glucose, mg/dL & 0.0007 \\
+31 & Ever daily glucocorticoid use & 0.0006 \\
+32 & Female sex & 0.0005 \\
+33 & Alcohol $\ge$3 drinks/day & 0.0005 \\
+34 & Calcium, mg/dL & 0.0001 \\
+35 & Phosphorus, mg/dL & 0.0001 \\
+\end{longtable}}
+
+\begin{table}[H]
+\centering
+\caption{Short form by sex in the temporal validation set: AUROC of the short form, the full model, the three-variable model and OST, and the short form's sensitivity and proportion referred at its development threshold (4.0\%).}
+\label{tab:sfsex}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrcccccc}
+\toprule
+Sex & $n$ & Cases & Short form & Full model & Age, weight, sex & OST & Sensitivity & Referred \\
+\midrule
+Women & 858 & 72 & 0.835 & 0.853 & 0.834 & 0.834 & 0.889 & 43.6\% \\
+Men & 1,150 & 24 & 0.800 & 0.820 & 0.800 & 0.800 & 0.583 & 15.7\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Predictors selected on the development set by each feature-selection method (used only for the re-implementation of the published approach).}
+\label{tab:fs}
+\small
+\begin{tabular}{p{2.3cm}p{12.5cm}}
+\toprule
+Method & Selected predictors \\
+\midrule
+Boruta (10) & age, PIR, BMI, weight, height, waist, alkaline phosphatase, creatinine, female sex, postmenopausal \\
+Lasso (34) & all candidates except weight \\
+XGBoost (10) & weight, postmenopausal, age, prior fracture, hormone use, female sex, coronary heart disease, non-Hispanic Black, Mexican American, BMI \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Re-implementation of the published analysis: 10-fold cross-validation in the development set (mean $\pm$ SD across folds). Features were selected once on the full development set, so these estimates are optimistic.}
+\label{tab:reimpl}
+\small
+\begin{tabular}{llcc}
+\toprule
+Feature selection & Classifier & AUROC & Accuracy \\
+\midrule
+Boruta & LR & 0.871 $\pm$ 0.021 & 0.956 \\
+ & SVM & 0.657 $\pm$ 0.050 & 0.955 \\
+ & RF & 0.849 $\pm$ 0.020 & 0.956 \\
+ & XGBoost & 0.845 $\pm$ 0.019 & 0.954 \\
+\addlinespace
+Lasso & LR & 0.879 $\pm$ 0.020 & 0.957 \\
+ & SVM & 0.777 $\pm$ 0.042 & 0.955 \\
+ & RF & 0.848 $\pm$ 0.020 & 0.956 \\
+ & XGBoost & 0.855 $\pm$ 0.016 & 0.956 \\
+\addlinespace
+XGBoost importance & LR & 0.872 $\pm$ 0.017 & 0.956 \\
+ & SVM & 0.653 $\pm$ 0.086 & 0.956 \\
+ & RF & 0.854 $\pm$ 0.025 & 0.956 \\
+ & XGBoost & 0.852 $\pm$ 0.022 & 0.955 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+{\setlength{\tabcolsep}{4pt}\small
+\begin{longtable}{lccc}
+\caption{Characteristics of the development (2005--2014) and temporal validation (2017--2018) sets. Mean (SD) or $n$ (\%); unweighted tests.}\label{tab:devval}\\
+\toprule
+Characteristic & Development ($n=7{,}649$) & Validation ($n=2{,}008$) & $P$ \\
+\midrule
+\endfirsthead
+\toprule
+Characteristic & Development & Validation & $P$ \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Osteoporosis (hip) & 343 (4.5) & 96 (4.8) & \\
+Age, years & 64.25 (9.48) & 64.07 (8.91) & 0.43 \\
+Income-to-poverty ratio & 2.72 (1.62) & 2.69 (1.60) & 0.48 \\
+Education level (1--5) & 3.22 (1.34) & 3.48 (1.25) & $<$0.001 \\
+BMI, kg/m$^2$ & 28.63 (5.46) & 29.14 (5.94) & $<$0.001 \\
+Weight, kg & 80.51 (17.70) & 81.11 (19.22) & 0.21 \\
+Height, cm & 167.50 (9.97) & 166.53 (9.81) & $<$0.001 \\
+Waist, cm & 100.95 (13.62) & 101.77 (14.39) & 0.022 \\
+Calcium, mg/dL & 9.46 (0.38) & 9.32 (0.37) & $<$0.001 \\
+Phosphorus, mg/dL & 3.74 (0.56) & 3.54 (0.53) & $<$0.001 \\
+Alkaline phosphatase, U/L & 72.64 (24.37) & 82.57 (25.16) & $<$0.001 \\
+Creatinine, mg/dL & 0.99 (0.54) & 0.96 (0.41) & 0.031 \\
+Albumin, g/dL & 4.20 (0.30) & 4.04 (0.30) & $<$0.001 \\
+Uric acid, mg/dL & 5.71 (1.42) & 5.66 (1.47) & 0.21 \\
+Glucose, mg/dL & 110.18 (44.03) & 109.68 (43.61) & 0.66 \\
+Total protein, g/dL & 7.12 (0.50) & 7.12 (0.44) & 0.67 \\
+Cholesterol, mg/dL & 199.23 (43.63) & 192.77 (44.14) & $<$0.001 \\
+25(OH) vitamin D, nmol/L & 65.06 (25.99) & 75.84 (32.93) & $<$0.001 \\
+Female sex & 3,293 (43.1) & 858 (42.7) & 0.81 \\
+Diabetes & 1,380 (18.1) & 468 (23.3) & $<$0.001 \\
+Arthritis & 3,027 (39.7) & 816 (40.7) & 0.41 \\
+Stroke & 429 (5.6) & 128 (6.4) & 0.22 \\
+Coronary heart disease & 570 (7.5) & 156 (7.8) & 0.67 \\
+Cancer & 1,181 (15.5) & 305 (15.2) & 0.80 \\
+Former smoker & 2,722 (35.6) & 621 (30.9) & $<$0.001 \\
+Current smoker & 1,338 (17.5) & 316 (15.7) & 0.067 \\
+Prior hip, wrist or spine fracture & 917 (12.0) & 250 (12.5) & 0.59 \\
+Parental hip fracture & 716 (9.6) & 218 (11.0) & 0.068 \\
+Ever daily glucocorticoid use & 390 (5.1) & 127 (6.4) & 0.032 \\
+Postmenopausal & 2,889 (38.5) & 755 (38.6) & 0.95 \\
+Ever used female hormones & 1,161 (15.5) & 208 (10.7) & $<$0.001 \\
+Alcohol $\ge$3 drinks/day & 168 (2.3) & 57 (3.0) & 0.097 \\
+Mexican American & 1,118 (14.6) & 231 (11.5) & $<$0.001 \\
+Other Hispanic & 608 (7.9) & 217 (10.8) & $<$0.001 \\
+Non-Hispanic Black & 1,549 (20.3) & 485 (24.2) & $<$0.001 \\
+Other/multiracial (incl.\ Asian) & 453 (5.9) & 357 (17.8) & $<$0.001 \\
+\end{longtable}}
+
+\begin{table}[H]
+\centering
+\caption{Participants aged $\ge$50 years in the cohort versus those excluded for lack of valid femoral neck DXA. Means or proportions; $P$ from Welch's $t$-test.}
+\label{tab:excl}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Characteristic & Cohort & No DXA & Missing in & $P$ \\
+ & ($n=9{,}657$) & ($n=3{,}185$) & no-DXA group & \\
+\midrule
+Age, years & 64.2 & 67.6 & 0.0\% & $<$0.001 \\
+Female sex & 43.0\% & 59.1\% & 0.0\% & $<$0.001 \\
+BMI, kg/m$^2$ & 28.7 & 33.0 & 25.1\% & $<$0.001 \\
+Weight, kg & 80.6 & 88.7 & 24.0\% & $<$0.001 \\
+Prior hip, wrist or spine fracture & 12.1\% & 15.6\% & 0.1\% & $<$0.001 \\
+Ever daily glucocorticoid use & 5.4\% & 7.7\% & 1.4\% & $<$0.001 \\
+Non-Hispanic Black & 21.1\% & 24.8\% & 0.0\% & $<$0.001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Percentage of missing values by cycle (final cohort). Predictors not shown had $\le$1\% missing in every cycle.}
+\label{tab:miss}
+\small
+\begin{tabular}{lccccc}
+\toprule
+Predictor & 2005--06 & 2007--08 & 2009--10 & 2013--14 & 2017--18 \\
+\midrule
+Income-to-poverty ratio & 4.9 & 9.8 & 9.9 & 8.2 & 13.4 \\
+25(OH) vitamin D, nmol/L & 2.6 & 14.6 & 4.1 & 3.2 & 3.5 \\
+Biochemistry panel (range) & 3.0--3.2 & 4.5--4.6 & 4.7--4.8 & 4.0--4.3 & 4.7--4.8 \\
+Waist, cm & 1.1 & 1.1 & 1.1 & 1.6 & 1.2 \\
+Parental hip fracture & 2.6 & 2.7 & 2.7 & 2.4 & 1.5 \\
+Postmenopausal & 1.6 & 1.7 & 3.0 & 1.4 & 2.7 \\
+Ever used female hormones & 1.8 & 1.9 & 3.3 & 1.6 & 2.9 \\
+Alcohol $\ge$3 drinks/day & 2.9 & 3.5 & 5.7 & 3.9 & 4.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Survey-weighted performance in the temporal validation set. Weighted: 2017--2018 examination weights, with design-based 95\% CIs from a Rao--Wu rescaled bootstrap over primary sampling units within strata (500 replicates). Non-response adjusted: examination weights divided by the modelled probability of having a valid DXA result. $\Delta$, full model minus comparator (non-response-adjusted). Observed prevalence 4.2\% (weighted) and 4.2\% (non-response adjusted).}
+\label{tab:weighted}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+Model & Weighted AUROC (95\% CI) & Non-response-adjusted AUROC (95\% CI) & $\Delta$ (95\% CI) & Predicted prevalence (NR-adjusted) \\
+\midrule
+Full model & 0.889 (0.835--0.937) & 0.872 (0.812--0.934) & -- & 3.9\% \\
+Full model without race & 0.887 (0.833--0.933) & 0.871 (0.802--0.933) & 0.001 ($-$0.004 to 0.009) & 3.7\% \\
+Boruta + XGBoost pipeline & 0.872 (0.809--0.929) & 0.860 (0.788--0.927) & 0.012 ($-$0.014 to 0.040) & 3.8\% \\
+LR: age, weight, sex & 0.870 (0.822--0.917) & 0.856 (0.793--0.912) & 0.016 ($-$0.009 to 0.043) & 3.5\% \\
+OST & 0.868 (0.816--0.914) & 0.849 (0.785--0.913) & 0.023 ($-$0.003 to 0.051) & 3.4\% \\
+ORAI & 0.819 (0.762--0.874) & 0.779 (0.688--0.874) & 0.093 (0.043--0.147) & 3.6\% \\
+SCORE & 0.860 (0.807--0.904) & 0.837 (0.762--0.906) & 0.035 (0.004--0.070) & 3.8\% \\
+LR-spline & 0.881 (0.819--0.935) & 0.866 (0.793--0.934) & 0.006 ($-$0.007 to 0.019) & 4.2\% \\
+SVM & 0.885 (0.830--0.935) & 0.873 (0.815--0.937) & $-$0.001 ($-$0.015 to 0.018) & 4.0\% \\
+Random forest & 0.877 (0.810--0.936) & 0.870 (0.804--0.934) & 0.002 ($-$0.028 to 0.029) & 3.9\% \\
+XGBoost & 0.883 (0.824--0.938) & 0.871 (0.805--0.941) & 0.001 ($-$0.017 to 0.020) & 4.0\% \\
+LightGBM & 0.885 (0.820--0.938) & 0.874 (0.802--0.941) & $-$0.002 ($-$0.021 to 0.017) & 3.9\% \\
+CatBoost & 0.885 (0.830--0.940) & 0.874 (0.812--0.935) & $-$0.002 ($-$0.024 to 0.018) & 3.9\% \\
+Stacking & 0.890 (0.836--0.937) & 0.877 (0.812--0.940) & $-$0.005 ($-$0.018 to 0.006) & 3.9\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Full model versus OST by sex in the temporal validation set. AUROC difference with paired bootstrap 95\% CI. OST cut-off columns show sensitivity / specificity / proportion referred (no fitting). Within each sex, the three-variable model had the same AUROC as OST.}
+\label{tab:ostsex}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrccccc}
+\toprule
+Sex & $n$ & Cases & Full model AUROC & OST AUROC & $\Delta$ (95\% CI) & OST $<2$ & OST $<-1$ \\
+\midrule
+Women & 858 & 72 & 0.853 & 0.834 & 0.019 ($-$0.005 to 0.046) & 0.875 / 0.552 / 48.4\% & 0.694 / 0.847 / 19.8\% \\
+Men & 1,150 & 24 & 0.820 & 0.800 & 0.020 ($-$0.031 to 0.068) & 0.833 / 0.689 / 32.2\% & 0.500 / 0.896 / 11.2\% \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Full model at alternative operating points in the temporal validation set (96 cases). The first two thresholds were chosen on the development set; the others are fixed predicted risks.}
+\label{tab:ops}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lccccccc}
+\toprule
+Operating point & Threshold & Referred & Detected & Sens. & Spec. & PPV & NPV \\
+\midrule
+Youden (development) & 4.8\% & 23.8\% & 77/96 & 0.802 & 0.791 & 0.161 & 0.988 \\
+Sensitivity 0.90 in development & 2.3\% & 39.3\% & 86/96 & 0.896 & 0.632 & 0.109 & 0.992 \\
+Fixed 3\% & 3.0\% & 32.8\% & 83/96 & 0.865 & 0.699 & 0.126 & 0.990 \\
+Fixed 5\% & 5.0\% & 22.8\% & 76/96 & 0.792 & 0.801 & 0.166 & 0.987 \\
+Fixed 10\% & 10.0\% & 12.0\% & 63/96 & 0.656 & 0.907 & 0.261 & 0.981 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Net benefit in the temporal validation set at selected threshold probabilities (95\% bootstrap CIs), with true and false positives per 100 people screened. OST recalibrated to probabilities.}
+\label{tab:nb}
+\small
+\begin{tabular}{llccc}
+\toprule
+Model & Threshold & Net benefit (95\% CI) & TP per 100 & FP per 100 \\
+\midrule
+Full model & 0.05 & 0.0279 (0.0194--0.0371) & 3.78 & 18.97 \\
+ & 0.10 & 0.0215 (0.0148--0.0299) & 3.14 & 8.86 \\
+ & 0.15 & 0.0122 (0.0059--0.0191) & 2.19 & 5.48 \\
+ & 0.20 & 0.0107 (0.0046--0.0171) & 1.84 & 3.09 \\
+\addlinespace
+Boruta + XGBoost & 0.05 & 0.0259 (0.0176--0.0341) & 3.64 & 19.92 \\
+ & 0.10 & 0.0190 (0.0122--0.0268) & 2.89 & 8.91 \\
+ & 0.15 & 0.0146 (0.0071--0.0220) & 2.44 & 5.53 \\
+ & 0.20 & 0.0078 (0.0022--0.0141) & 1.69 & 3.64 \\
+\addlinespace
+LR: age, weight, sex & 0.05 & 0.0265 (0.0181--0.0354) & 3.69 & 19.62 \\
+ & 0.10 & 0.0181 (0.0106--0.0256) & 2.84 & 9.26 \\
+ & 0.15 & 0.0114 (0.0056--0.0178) & 1.89 & 4.28 \\
+ & 0.20 & 0.0078 (0.0025--0.0139) & 1.44 & 2.64 \\
+\addlinespace
+OST (recalibrated) & 0.05 & 0.0268 (0.0181--0.0356) & 3.74 & 20.12 \\
+ & 0.10 & 0.0183 (0.0108--0.0261) & 2.84 & 9.11 \\
+ & 0.15 & 0.0077 (0.0021--0.0140) & 1.69 & 5.23 \\
+ & 0.20 & 0.0056 (0.0007--0.0112) & 1.29 & 2.94 \\
+\addlinespace
+ORAI (recalibrated) & 0.05 & 0.0202 (0.0128--0.0280) & 3.09 & 20.27 \\
+ & 0.10 & 0.0122 (0.0064--0.0188) & 1.99 & 6.97 \\
+ & 0.15 & 0.0048 (0.0011--0.0091) & 0.80 & 1.79 \\
+ & 0.20 & 0.0035 (-0.0002--0.0080) & 0.80 & 1.79 \\
+\addlinespace
+SCORE (recalibrated) & 0.05 & 0.0257 (0.0177--0.0345) & 3.64 & 20.22 \\
+ & 0.10 & 0.0160 (0.0091--0.0231) & 2.59 & 8.91 \\
+ & 0.15 & 0.0085 (0.0031--0.0144) & 1.64 & 4.48 \\
+ & 0.20 & 0.0054 (0.0001--0.0112) & 1.29 & 3.04 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Sensitivity analyses: temporal-validation AUROC and calibration slope.}
+\label{tab:sens}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Analysis / model & Dev. prev. & Val. prev. & AUROC & Slope \\
+\midrule
+\multicolumn{5}{l}{\textit{Hip or complete-scan lumbar spine (L1--L4)}} \\
+\quad Full model & 7.2\% & 6.7\% & 0.846 & 1.06 \\
+\quad OST &  &  & 0.823 & 1.11 \\
+\quad LR: age, weight, sex &  &  & 0.836 & 1.12 \\
+\multicolumn{5}{l}{\textit{Hip or lumbar spine from $\ge$2 valid vertebrae}} \\
+\quad Full model & 8.4\% & 8.2\% & 0.840 & 1.05 \\
+\quad OST &  &  & 0.801 & 1.04 \\
+\quad LR: age, weight, sex &  &  & 0.824 & 1.10 \\
+\multicolumn{5}{l}{\textit{Excluding non-Hispanic Asian participants}} \\
+\quad Full model & 4.4\% & 4.4\% & 0.861 & 0.92 \\
+\multicolumn{5}{l}{\textit{Development on 2013--2014 only (same scanner type)}} \\
+\quad Full model & 4.8\% & 4.8\% & 0.854 & 1.13 \\
+\multicolumn{5}{l}{\textit{Development set without 2005--2006}} \\
+\quad Full model & 4.5\% & 4.8\% & 0.869 & 1.00 \\
+\multicolumn{5}{l}{\textit{Without laboratory predictors}} \\
+\quad Full model & 4.5\% & 4.8\% & 0.863 & 0.98 \\
+\multicolumn{5}{l}{\textit{Without alcohol predictor}} \\
+\quad Full model & 4.5\% & 4.8\% & 0.869 & 0.99 \\
+\multicolumn{5}{l}{\textit{Including previously diagnosed or treated participants}} \\
+\quad Full model & 6.4\% & 7.1\% & 0.859 & 0.97 \\
+\quad OST &  &  & 0.824 & 0.89 \\
+\quad LR: age, weight, sex &  &  & 0.839 & 0.95 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{longtable}{lrr}
+\caption{Coefficients of the full model (penalised logistic regression on 35 predictors, recalibrated, original units). Units as in Supplementary Table~\ref{tab:devval}; binary predictors 1 = yes. Coefficients are penalised and correlated predictors are not individually interpretable.}\label{tab:coef}\\
+\toprule
+Term & Coefficient & Odds ratio per unit \\
+\midrule
+\endfirsthead
+\toprule
+Term & Coefficient & Odds ratio per unit \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+Intercept & 6.95527 &  \\
+Age, years & 0.05908 & 1.061 \\
+Income-to-poverty ratio & $-$0.14411 & 0.866 \\
+Education level (1--5) & 0.03807 & 1.039 \\
+BMI, kg/m$^2$ & $-$0.15810 & 0.854 \\
+Weight, kg & $-$0.03937 & 0.961 \\
+Height, cm & $-$0.04479 & 0.956 \\
+Waist, cm & 0.02589 & 1.026 \\
+Calcium, mg/dL & $-$0.01321 & 0.987 \\
+Phosphorus, mg/dL & $-$0.00500 & 0.995 \\
+Alkaline phosphatase, U/L & 0.00771 & 1.008 \\
+Creatinine, mg/dL & 0.29171 & 1.339 \\
+Albumin, g/dL & $-$0.27440 & 0.760 \\
+Uric acid, mg/dL & $-$0.02154 & 0.979 \\
+Glucose, mg/dL & $-$0.00101 & 0.999 \\
+Total protein, g/dL & $-$0.20078 & 0.818 \\
+Cholesterol, mg/dL & 0.00119 & 1.001 \\
+25(OH) vitamin D, nmol/L & $-$0.00539 & 0.995 \\
+Female sex & $-$0.02615 & 0.974 \\
+Diabetes & 0.18337 & 1.201 \\
+Arthritis & $-$0.24444 & 0.783 \\
+Stroke & 0.53830 & 1.713 \\
+Coronary heart disease & 0.31449 & 1.370 \\
+Cancer & $-$0.38293 & 0.682 \\
+Former smoker & $-$0.05355 & 0.948 \\
+Current smoker & 0.20477 & 1.227 \\
+Prior hip, wrist or spine fracture & 0.93243 & 2.541 \\
+Parental hip fracture & $-$0.14696 & 0.863 \\
+Ever daily glucocorticoid use & 0.14705 & 1.158 \\
+Postmenopausal & 0.99824 & 2.714 \\
+Ever used female hormones & $-$0.79702 & 0.451 \\
+Alcohol $\ge$3 drinks/day & $-$0.33579 & 0.715 \\
+Mexican American & $-$0.77710 & 0.460 \\
+Other Hispanic & $-$0.36512 & 0.694 \\
+Non-Hispanic Black & $-$0.80116 & 0.449 \\
+Other/multiracial (incl.\ Asian) & $-$0.26758 & 0.765 \\
+\end{longtable}
+
+\begin{table}[H]
+\centering
+\caption{Temporal-validation results in every version of this analysis. Versions differed in outcome definition, cohort and comparators, as listed; all used the same 2005--2014 / 2017--2018 split. The present analysis is version 6.}
+\label{tab:versions}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{clllccc}
+\toprule
+Version & Outcome & Cohort and predictors & Prevalence & Best model AUROC (95\% CI) & OST & LR: age, weight, sex \\
+\midrule
+1 & Femoral neck or L1--L4 (complete scans) & All with DXA; 29 predictors & 9.2\% & LR 0.843 (0.813--0.871) & -- & -- \\
+2 & Femoral neck or spine ($\ge$2 vertebrae) & All with DXA; 35 predictors & 10.8\% & LR 0.839 (0.813--0.864) & 0.796 & 0.822 \\
+3 & Hip (femoral neck or total hip) & All with DXA; 35 predictors & 6.6\% & LR-spline 0.869 (0.839--0.895) & 0.824 & 0.839 \\
+4 & Hip & Previously diagnosed excluded; 35 predictors & 4.7\% & LR 0.870 (0.835--0.905) & 0.839 & 0.850 \\
+5 & Hip & Diagnosed or treated excluded; all families tuned & 4.5\% & LR 0.869 (0.831--0.903) & 0.841 & 0.851 \\
+6 & Hip & As 5; 40 trials for every family, wider search spaces; ORAI, SCORE; IECV & 4.5\% & LR 0.869 (0.831--0.904) & 0.841 & 0.851 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\small
+\begin{longtable}{p{1.0cm}p{6.4cm}p{7.1cm}}
+\caption{TRIPOD+AI checklist \cite{collins2024}: where each item is reported.}\label{tab:tripod}\\
+\toprule
+Item & Topic & Where reported \\
+\midrule
+\endfirsthead
+\toprule
+Item & Topic & Where reported \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1 & Title & Title page \\
+2 & Abstract & Abstract \\
+3a & Healthcare context and rationale & Introduction, paragraphs 1--3 \\
+3b & Intended purpose and users & Introduction; Discussion, Implementation considerations \\
+3c & Known health inequalities & Introduction (item 5); Methods, Subgroup and fairness analysis \\
+4 & Objectives & Introduction, final paragraphs \\
+5a & Data sources & Methods, Data source \\
+5b & Dates of data collection & Methods, Data source; Development and temporal validation sets \\
+6a & Setting & Methods, Data source \\
+6b & Eligibility criteria & Methods, Study population; Figure~\ref{fig:flow} \\
+6c & Treatments received & Methods, Study population (diagnosed or treated excluded) \\
+7 & Data preparation and quality checks & Methods, Data preparation; Table~\ref{tab:miss} \\
+8a & Outcome definition and assessment & Methods, Outcome definition \\
+8b & Outcome assessors & Methods, Outcome definition (NHANES DXA technologists) \\
+8c & Blinding of outcome assessment & Methods, Outcome definition (DXA independent of predictors) \\
+9a & Choice of predictors & Methods, Candidate predictors \\
+9b & Predictor definitions and measurement & Methods, Candidate predictors; Data preparation \\
+9c & Predictor assessors and blinding & Standard NHANES interview, examination and laboratory protocols \\
+10 & Sample size & Methods, Sample size \\
+11 & Missing data & Methods, Missing data; Table~\ref{tab:miss} \\
+12a & Use of data in development and evaluation & Methods, Development and temporal validation sets \\
+12b & Handling of predictors & Methods, Missing data; Models (splines, standardisation) \\
+12c & Model type, building and tuning & Methods, Models, class-imbalance strategies and tuning; Table~\ref{tab:tuned}; Supplementary Table~\ref{tab:hyper} \\
+12d & Heterogeneity across clusters & Methods, Internal--external validation; Sensitivity analyses (cycles, scanner); Survey weighting and non-response \\
+12e & Performance measures & Methods, Performance evaluation \\
+12f & Model updating or recalibration & Methods, Recalibration and thresholds \\
+12g & How predictions are calculated & Methods, Short-form model; Tables~\ref{tab:eq} and~\ref{tab:coef}; code \\
+13 & Class imbalance & Methods, Models, class-imbalance strategies and tuning \\
+14 & Fairness & Methods, Subgroup and fairness analysis \\
+15 & Model output and thresholds & Methods, Recalibration and thresholds; Supplementary Table~\ref{tab:ops} \\
+16 & Differences between development and evaluation data & Results, Participant characteristics; Table~\ref{tab:devval} \\
+17 & Ethics & Declarations \\
+18a--b & Funding; conflicts of interest & Declarations \\
+18c--d & Protocol; registration & Declarations (none) \\
+18e--f & Data and code availability & Declarations \\
+19 & Patient and public involvement & Declarations (none) \\
+20a & Participant flow & Figure~\ref{fig:flow} \\
+20b & Participant characteristics & Table~\ref{tab:baseline} \\
+20c & Comparison of development and evaluation data & Table~\ref{tab:devval} \\
+21 & Numbers of participants and outcome events & Figure~\ref{fig:flow}; Methods, Sample size; Table~\ref{tab:fair} \\
+22 & Full model specification & Tables~\ref{tab:eq} and~\ref{tab:coef}; code repository \\
+23a & Performance with confidence intervals, including subgroups & Tables~\ref{tab:perf}, \ref{tab:fair} and~\ref{tab:strata}; Figures~\ref{fig:roc}--\ref{fig:dca} \\
+23b & Heterogeneity across clusters & Table~\ref{tab:iecv}; Supplementary Tables~\ref{tab:sens}, \ref{tab:weighted} and~\ref{tab:ostsex} \\
+24 & Model updating results & Results, Calibration and clinical utility \\
+25 & Interpretation & Discussion \\
+26 & Limitations & Discussion, Strengths and limitations; Supplementary Table~\ref{tab:versions} \\
+27a & Handling of poor-quality or missing input data & Methods, Missing data (imputation model in code) \\
+27b & User interaction and required expertise & Discussion, Implementation considerations \\
+27c & Future research and applicability & Discussion, Implementation considerations; Limitations \\
+\end{longtable}
+\normalsize
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{fig7_shap_dependence_1_bmi.png}\hfill
+\includegraphics[width=0.45\textwidth]{fig7_shap_dependence_2_weight.png}\\[4pt]
+\includegraphics[width=0.45\textwidth]{fig7_shap_dependence_3_postmenopausal.png}\hfill
+\includegraphics[width=0.45\textwidth]{fig7_shap_dependence_4_age.png}
+\caption{SHAP dependence plots for the four most important predictors (BMI, weight, postmenopausal status, age), full model, 500 development-set participants.}
+\label{fig:dep}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.48\textwidth]{fig8_shap_waterfall_high_risk.png}\hfill
+\includegraphics[width=0.48\textwidth]{fig8_shap_waterfall_low_risk.png}
+\caption{SHAP waterfall plots for the highest-risk (left) and lowest-risk (right) individuals in the explained development sample.}
+\label{fig:waterfall}
+\end{figure}
+
+\end{document}

@@ -1,0 +1,6 @@
+step,n
+All NHANES participants in selected cycles,50463
+Aged >= 50 years,14166
+With valid femoral neck DXA,10981
+With <= 50% of predictors missing,10981
+Not diagnosed with or treated for osteoporosis (final cohort),9657

@@ -1,0 +1,20 @@
+short_form_linear {
+ "model": "short_form_linear",
+ "predictors": "bmi;postmenopausal;weight;age;waist;height;hormone_use;prior_fracture;pir;female",
+ "threshold": 0.046026867184328794,
+ "AUROC": 0.8617309577351093,
+ "AUPRC": 0.3597698167973635,
+ "calib_slope": 1.0087590536490303,
+ "calib_intercept": 0.13105415093632813,
+ "DeLong_p_vs_OST": 0.018258359596002256
+}
+short_form_linear_no_lab {
+ "model": "short_form_linear_no_lab",
+ "predictors": "bmi;postmenopausal;weight;age;waist;height;hormone_use;prior_fracture;pir;female",
+ "threshold": 0.046026867184328794,
+ "AUROC": 0.8617309577351093,
+ "AUPRC": 0.3597698167973635,
+ "calib_slope": 1.0087590536490303,
+ "calib_intercept": 0.13105415093632813,
+ "DeLong_p_vs_OST": 0.018258359596002256
+}

@@ -1,0 +1,51 @@
+{
+  "n": 9657,
+  "events": 439,
+  "prev_pct": 4.545925235580408,
+  "prev_weighted_pct": 3.8877548532797617,
+  "prev_by_cycle_pct": {
+    "2005-2006": 4.57,
+    "2007-2008": 4.02,
+    "2009-2010": 4.62,
+    "2013-2014": 4.76,
+    "2017-2018": 4.78
+  },
+  "train_n": 7649,
+  "train_events": 343,
+  "test_n": 2008,
+  "test_events": 96,
+  "events_per_predictor": 9.8,
+  "mean_age": 64.21186703945325,
+  "female_pct": 42.984363674018844,
+  "n_excluded_no_dxa": 3185,
+  "n_excluded_diagnosed": 1155,
+  "fn_only_prev_pct": 4.090297193745469,
+  "sensitivity_outcome_prev_pct": {
+    "osteo_spine_complete": 7.082945013979497,
+    "osteo_spine_partial": 8.387698042870456
+  },
+  "sensitivity_outcome_prev_by_cycle_pct": {
+    "osteo_spine_complete": {
+      "2005-2006": 7.81,
+      "2007-2008": 6.56,
+      "2009-2010": 7.3,
+      "2013-2014": 7.3,
+      "2017-2018": 6.67
+    },
+    "osteo_spine_partial": {
+      "2005-2006": 8.58,
+      "2007-2008": 7.37,
+      "2009-2010": 8.78,
+      "2013-2014": 9.12,
+      "2017-2018": 8.17
+    }
+  },
+  "spine_available_pct": 91.49839494667081,
+  "partial_spine_pct_by_cycle": {
+    "2005-2006": 15.3,
+    "2007-2008": 23.2,
+    "2009-2010": 32.1,
+    "2013-2014": 38.3,
+    "2017-2018": 38.1
+  }
+}

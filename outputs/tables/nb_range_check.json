@@ -1,0 +1,34 @@
+{
+ "Full model (LR)": {
+  "min_margin_vs_default": 0.000784739828564536,
+  "thresholds_not_above_default": []
+ },
+ "Boruta + XGBoost pipeline": {
+  "min_margin_vs_default": 0.00033200531208499307,
+  "thresholds_not_above_default": []
+ },
+ "Age, weight, sex (LR)": {
+  "min_margin_vs_default": 0.0015141454384482306,
+  "thresholds_not_above_default": []
+ },
+ "OST": {
+  "min_margin_vs_default": -0.00013582035494385386,
+  "thresholds_not_above_default": [
+   0.01
+  ]
+ },
+ "ORAI": {
+  "min_margin_vs_default": -0.00036218761318362186,
+  "thresholds_not_above_default": [
+   0.01,
+   0.37,
+   0.38,
+   0.39,
+   0.4
+  ]
+ },
+ "SCORE": {
+  "min_margin_vs_default": 0.0011620185922974766,
+  "thresholds_not_above_default": []
+ }
+}

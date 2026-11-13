@@ -1,0 +1,34 @@
+Previously diagnosed: 1155; osteoporosis drug users: 486 (not diagnosed: 169); excluded in total 1324, of whom 282 meet the hip outcome
+
+Participant flow:
+   50,463  All NHANES participants in selected cycles
+   14,166  Aged >= 50 years
+   10,981  With valid femoral neck DXA
+   10,981  With <= 50% of predictors missing
+    9,657  Not diagnosed with or treated for osteoporosis (final cohort)
+
+By cycle:
+              osteoporosis  ...  ls_partial
+cycle_years                ...            
+2005-2006           0.046  ...       0.153
+2007-2008           0.040  ...       0.232
+2009-2010           0.046  ...       0.321
+2013-2014           0.048  ...       0.383
+2017-2018           0.048  ...       0.381
+
+[5 rows x 4 columns]
+
+Missing % per predictor:
+ pir              9.5
+vitamin_d        5.9
+total_protein    4.4
+calcium          4.4
+cholesterol      4.3
+glucose          4.3
+phosphorus       4.3
+alk_phos         4.3
+creatinine       4.3
+albumin          4.3
+dtype: float64
+
+Saved /Users/sulaxan/Claude Work/Project 2/osteoporosis_nhanes/data/processed/nhanes_osteoporosis.csv
