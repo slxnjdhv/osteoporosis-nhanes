@@ -84,3 +84,6 @@ Output: `main.pdf`.
 - Title-page details (author, affiliation, ORCID, funding, contributions, code link, word count) are filled in; check the funding statement and word count against the journal's requirements.
 - Journal of Medical Systems uses the Springer Nature LaTeX template (`sn-jnl`). Text, tables and
   `thebibliography` can be pasted into it unchanged; switch the reference style if the journal asks.
+
+
+Journal of Medical Screening formatting (after tag `jmedsyst-submission`): structured abstract (Objectives, Setting, Methods, Results, Conclusions; 240 words), keywords after the abstract, postal address on the title page, Acknowledgements (AI assistance), Author contributions and Statements and Declarations moved to the end with Sage headings and NCHS ERB protocol numbers, journal references converted to Sage Vancouver. The J Med Syst version is kept as manuscript/main_jmedsyst_final.tex and the git tag.

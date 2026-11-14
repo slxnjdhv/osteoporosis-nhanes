@@ -42,41 +42,30 @@
 \vspace{1em}
 {\small Symbiosis School of Economics, Symbiosis International (Deemed University), Pune, India\\[2pt]
 ORCID: \href{https://orcid.org/0000-0003-2500-6030}{0000-0003-2500-6030}\\[2pt]
-$^{*}$Corresponding author: Dr Sulaxan Jadhav, Symbiosis School of Economics, Symbiosis International (Deemed University), Pune, India. E-mail: \href{mailto:sulaxan.jadhav@sse.ac.in}{sulaxan.jadhav@sse.ac.in}\par}
+$^{*}$Corresponding author: Dr Sulaxan Jadhav, Symbiosis School of Economics, Symbiosis International (Deemed University), 3rd Floor, SCHC Building, Senapati Bapat Road, Pune 411004, Maharashtra, India. E-mail: \href{mailto:sulaxan.jadhav@sse.ac.in}{sulaxan.jadhav@sse.ac.in}\par}
 \end{center}
 \vspace{2em}
 \noindent\textbf{Running title:} Machine learning vs simple tools for osteoporosis screening\\[4pt]
 \textbf{Word count:} 3,270 (main text, excluding abstract, tables, figure legends and references)\\[2pt]
 \textbf{Tables:} 5 \quad \textbf{Figures:} 4 (+23 supplementary tables, 2 supplementary figures)\\[4pt]
-\textbf{Keywords:} osteoporosis; mass screening; machine learning; Osteoporosis Self-Assessment Tool; internal--external cross-validation; NHANES
 
-\vfill
-\noindent\textbf{Statements and Declarations}
-
-\noindent\textbf{Funding.} This research received no specific grant from any funding agency in the public, commercial or not-for-profit sectors.\\
-\textbf{Competing interests.} The author declares no competing interests.\\
-\textbf{Ethics approval.} NHANES protocols were approved by the NCHS Research Ethics Review Board, and all participants provided written informed consent. This secondary analysis of publicly available, de-identified data did not require additional institutional review.\\
-\textbf{Consent to participate.} Written informed consent was obtained by NCHS from all NHANES participants.\\
-\textbf{Consent for publication.} Not applicable.\\
-\textbf{Data availability.} NHANES data are publicly available from the National Center for Health Statistics (\url{https://www.cdc.gov/nchs/nhanes/}).\\
-\textbf{Code availability.} Analysis code, including the fitted model equations, is available at \url{https://github.com/slxnjdhv/osteoporosis-nhanes}.\\
-\textbf{Protocol and registration.} No study protocol was prepared in advance and the study was not registered.\\
-\textbf{Patient and public involvement.} None.\\
-\textbf{Author contributions.} Sulaxan Jadhav: conceptualisation, methodology, software, formal analysis, data curation, visualisation, writing -- original draft, and writing -- review and editing. The author read and approved the final manuscript.\\
-\textbf{Use of AI tools.} Claude (Anthropic) was used for analytic and generative tasks, as described in the Methods (Software).
 \end{titlepage}
 
 
 % ---------------------------------------------------------------- Abstract
 \begin{abstract}
-\noindent\textbf{Background.} Machine learning (ML) models for osteoporosis screening are rarely compared with simple clinical tools under equal conditions.
+\noindent\textbf{Objectives.} To estimate how much machine learning (ML) and additional predictors add to simple tools for selecting adults for dual-energy X-ray absorptiometry (DXA).
 
-\noindent\textbf{Methods.} We studied 9,657 adults aged $\ge$50 years in five NHANES cycles (2005--2018), not diagnosed with or treated for osteoporosis; the outcome was a hip T-score $\le -2.5$. Seven model families using 35 clinical, laboratory and socio-demographic predictors were tuned equally and recalibrated. In internal--external cross-validation (IECV) across cycles, logistic regression was compared with the Osteoporosis Self-Assessment Tool (OST), a sex-specific OST, ORAI, SCORE and an age--weight--sex model, and the other families with logistic regression. The main estimand, chosen after earlier analyses (all reported), was the pooled AUROC difference from OST; the equivalence margin was $\pm$0.02. The study is exploratory.
+\noindent\textbf{Setting.} Five US National Health and Nutrition Examination Survey (NHANES) cycles, 2005--2018: 9,657 adults aged $\ge$50 years without diagnosed or treated osteoporosis; 439 had a hip T-score $\le -2.5$.
 
-\noindent\textbf{Results.} Penalised logistic regression was not outperformed: in IECV, five of six tuned ML families were equivalent to it, and none was better. In IECV it exceeded OST by 0.024 in AUROC (95\% CI 0.009--0.038) and the age--weight--sex model by 0.019 (0.004--0.033); their clinical relevance was uncertain. A clinical model without blood tests, race or income exceeded OST by 0.016 (0.004--0.029). Referring 20\% of people for DXA, the full model detected 2.8 (1.0--4.3) more cases per 1,000 screened than OST (8.6\% more), and the clinical model 1.7 more.
+\noindent\textbf{Methods.} Seven model families using 35 clinical, laboratory and socio-demographic predictors were tuned equally and recalibrated. In internal--external cross-validation (IECV) across cycles, with all tuning nested, penalised logistic regression was compared with the Osteoporosis Self-Assessment Tool (OST), a sex-specific OST, two other screening scores and an age--weight--sex model, and the other families with logistic regression (equivalence margin $\pm$0.02 in the area under the receiver operating characteristic curve, AUROC). The study is exploratory; its main estimand was chosen post hoc.
 
-\noindent\textbf{Conclusions.} Equally tuned ML did not outperform logistic regression. Thirty-five predictors gave a small, consistent gain over simple tools, about three cases per 1,000 screened at equal DXA capacity; whether that justifies a complex tool is a local judgement.
+\noindent\textbf{Results.} No ML family outperformed logistic regression, and five of six were equivalent to it. Logistic regression exceeded OST by 0.024 in AUROC (95\% CI 0.009--0.038) and the age--weight--sex model by 0.019 (0.004--0.033), gains of uncertain clinical relevance. A clinical model without blood tests, race or income exceeded OST by 0.016 (0.004--0.029). At 20\% referral, the full model detected 2.8 (1.0--4.3) more cases per 1,000 screened than OST (8.6\% more), and the clinical model 1.7 more.
+
+\noindent\textbf{Conclusions.} Equally tuned ML did not outperform logistic regression, and 35 predictors added only about three cases per 1,000 screened to simple tools at the same DXA capacity; whether that justifies a complex tool is a local judgement.
 \end{abstract}
+
+\noindent\textbf{Keywords:} osteoporosis; mass screening; machine learning; Osteoporosis Self-Assessment Tool; internal--external cross-validation; NHANES
 
 % ================================================================= 1 Introduction
 \section{Introduction}
@@ -407,77 +396,98 @@ The study also has limitations. First, it is cross-sectional: the models detect 
 In older US adults neither diagnosed with nor treated for osteoporosis, equally tuned machine learning did not outperform logistic regression, and 35 predictors added about 0.02 in AUROC to OST and to age, weight and sex, or about 3 more cases per 1,000 people screened at the same DXA capacity, two-thirds of it obtainable from clinical items alone. Simple tools capture most of the achievable discrimination; whether the remainder is worth a complex tool is a decision for each health system, and the choice of threshold, including whether it is applied to men, matters more than the algorithm.
 
 
+
+\section*{Acknowledgements}
+The author used Claude (Anthropic; Claude Opus models, most recently Claude Opus 5.5, accessed through the Claude Code desktop application, 2026) to write and run the analysis code, to draft and revise the manuscript text and tables, and to review drafts critically; details are given in the Methods (Software). The author is responsible for the content.
+
+\section*{Author contributions}
+Sulaxan Jadhav: conceptualisation, methodology, software, formal analysis, data curation, visualisation, writing -- original draft, and writing -- review and editing. The author read and approved the final manuscript.
+
+\section*{Statements and Declarations}
+\subsection*{Ethical considerations}
+NHANES protocols were approved by the National Center for Health Statistics (NCHS) Research Ethics Review Board: Protocol \#2005-06 (2005--2010), Protocol \#2011-17 (2013--2014, and 2017--2018 until 26 October 2017) and Protocol \#2018-01 (2017--2018 from 26 October 2017). This secondary analysis of publicly available, de-identified data did not require further ethical approval.
+\subsection*{Consent to participate}
+Written informed consent was obtained by NCHS from all NHANES participants.
+\subsection*{Consent for publication}
+Not applicable.
+\subsection*{Declaration of conflicting interest}
+The author declared no potential conflicts of interest with respect to the research, authorship, and/or publication of this article.
+\subsection*{Funding statement}
+The author received no financial support for the research, authorship, and/or publication of this article.
+\subsection*{Data availability}
+NHANES data are publicly available from NCHS (\url{https://www.cdc.gov/nchs/nhanes/}). Analysis code, fitted model equations and outputs are available at \url{https://github.com/slxnjdhv/osteoporosis-nhanes}. No study protocol was prepared in advance, the study was not registered, and there was no patient or public involvement.
+
 \begin{thebibliography}{99}\small
 
-\bibitem{compston2019} Compston JE, McClung MR, Leslie WD. Osteoporosis. Lancet. 2019;393(10169):364--376. \href{https://doi.org/10.1016/S0140-6736(18)32112-3}{doi:10.1016/S0140-6736(18)32112-3}
+\bibitem{compston2019} Compston JE, McClung MR, Leslie WD. Osteoporosis. Lancet 2019; 393: 364--376. DOI: \href{https://doi.org/10.1016/S0140-6736(18)32112-3}{10.1016/S0140-6736(18)32112-3}
 
 \bibitem{sarafrazi2021} Sarafrazi N, Wambogo EA, Shepherd JA. Osteoporosis or low bone mass in older adults: United States, 2017--2018. NCHS Data Brief No.\ 405. Hyattsville, MD: National Center for Health Statistics; 2021. \href{https://dx.doi.org/10.15620/cdc:103477}{doi:10.15620/cdc:103477}
 
-\bibitem{kanis1994} Kanis JA, Melton LJ 3rd, Christiansen C, Johnston CC, Khaltaev N. The diagnosis of osteoporosis. J Bone Miner Res. 1994;9(8):1137--1141. \href{https://doi.org/10.1002/jbmr.5650090802}{doi:10.1002/jbmr.5650090802}
+\bibitem{kanis1994} Kanis JA, Melton LJ 3rd, Christiansen C, Johnston CC, Khaltaev N. The diagnosis of osteoporosis. J Bone Miner Res 1994; 9: 1137--1141. DOI: \href{https://doi.org/10.1002/jbmr.5650090802}{10.1002/jbmr.5650090802}
 
-\bibitem{uspstf2025} US Preventive Services Task Force; Nicholson WK, Silverstein M, Wong JB, et al. Screening for osteoporosis to prevent fractures: US Preventive Services Task Force recommendation statement. JAMA. 2025;333(6):498. \href{https://doi.org/10.1001/jama.2024.27154}{doi:10.1001/jama.2024.27154}
+\bibitem{uspstf2025} US Preventive Services Task Force; Nicholson WK, Silverstein M, Wong JB, et al. Screening for osteoporosis to prevent fractures: US Preventive Services Task Force recommendation statement. JAMA 2025; 333: 498. DOI: \href{https://doi.org/10.1001/jama.2024.27154}{10.1001/jama.2024.27154}
 
-\bibitem{geusens2002} Geusens P, Hochberg MC, van der Voort DJ, Pols H, van der Klift M, Siris E, et al. Performance of risk indices for identifying low bone density in postmenopausal women. Mayo Clin Proc. 2002;77(7):629--637. \href{https://doi.org/10.4065/77.7.629}{doi:10.4065/77.7.629}
+\bibitem{geusens2002} Geusens P, Hochberg MC, van der Voort DJ, Pols H, van der Klift M, Siris E, et al. Performance of risk indices for identifying low bone density in postmenopausal women. Mayo Clin Proc 2002; 77: 629--637. DOI: \href{https://doi.org/10.4065/77.7.629}{10.4065/77.7.629}
 
-\bibitem{koh2001} Koh LK, Sedrine WB, Torralba TP, et al. A simple tool to identify Asian women at increased risk of osteoporosis. Osteoporos Int. 2001;12(8):699--705. \href{https://doi.org/10.1007/s001980170070}{doi:10.1007/s001980170070}
+\bibitem{koh2001} Koh LK, Sedrine WB, Torralba TP, et al. A simple tool to identify Asian women at increased risk of osteoporosis. Osteoporos Int 2001; 12: 699--705. DOI: \href{https://doi.org/10.1007/s001980170070}{10.1007/s001980170070}
 
-\bibitem{cadarette2000} Cadarette SM, Jaglal SB, Kreiger N, McIsaac WJ, Darlington GA, Tu JV. Development and validation of the Osteoporosis Risk Assessment Instrument to facilitate selection of women for bone densitometry. CMAJ. 2000;162(9):1289--1294.
+\bibitem{cadarette2000} Cadarette SM, Jaglal SB, Kreiger N, McIsaac WJ, Darlington GA, Tu JV. Development and validation of the Osteoporosis Risk Assessment Instrument to facilitate selection of women for bone densitometry. CMAJ 2000; 162: 1289--1294.
 
-\bibitem{lydick1998} Lydick E, Cook K, Turpin J, Melton M, Stine R, Byrnes C. Development and validation of a simple questionnaire to facilitate identification of women likely to have low bone density. Am J Manag Care. 1998;4(1):37--48.
+\bibitem{lydick1998} Lydick E, Cook K, Turpin J, Melton M, Stine R, Byrnes C. Development and validation of a simple questionnaire to facilitate identification of women likely to have low bone density. Am J Manag Care 1998; 4: 37--48.
 
-\bibitem{rud2007} Rud B, Hilden J, Hyldstrup L, Hr\'{o}bjartsson A. Performance of the Osteoporosis Self-Assessment Tool in ruling out low bone mineral density in postmenopausal women: a systematic review. Osteoporos Int. 2007;18(9):1177--1187. \href{https://doi.org/10.1007/s00198-006-0319-3}{doi:10.1007/s00198-006-0319-3}
+\bibitem{rud2007} Rud B, Hilden J, Hyldstrup L, Hr\'{o}bjartsson A. Performance of the Osteoporosis Self-Assessment Tool in ruling out low bone mineral density in postmenopausal women: a systematic review. Osteoporos Int 2007; 18: 1177--1187. DOI: \href{https://doi.org/10.1007/s00198-006-0319-3}{10.1007/s00198-006-0319-3}
 
-\bibitem{gourlay2008} Gourlay ML, Powers JM, Lui LY, Ensrud KE. Clinical performance of osteoporosis risk assessment tools in women aged 67 years and older. Osteoporos Int. 2008;19(8):1175--1183. \href{https://doi.org/10.1007/s00198-007-0555-1}{doi:10.1007/s00198-007-0555-1}
+\bibitem{gourlay2008} Gourlay ML, Powers JM, Lui LY, Ensrud KE. Clinical performance of osteoporosis risk assessment tools in women aged 67 years and older. Osteoporos Int 2008; 19: 1175--1183. DOI: \href{https://doi.org/10.1007/s00198-007-0555-1}{10.1007/s00198-007-0555-1}
 
-\bibitem{rubin2013} Rubin KH, Friis-Holmberg T, Hermann AP, Abrahamsen B, Brixen K. Risk assessment tools to identify women with increased risk of osteoporotic fracture: complexity or simplicity? A systematic review. J Bone Miner Res. 2013;28(8):1701--1717. \href{https://doi.org/10.1002/jbmr.1956}{doi:10.1002/jbmr.1956}
+\bibitem{rubin2013} Rubin KH, Friis-Holmberg T, Hermann AP, Abrahamsen B, Brixen K. Risk assessment tools to identify women with increased risk of osteoporotic fracture: complexity or simplicity? A systematic review. J Bone Miner Res 2013; 28: 1701--1717. DOI: \href{https://doi.org/10.1002/jbmr.1956}{10.1002/jbmr.1956}
 
-\bibitem{nayak2015} Nayak S, Edwards DL, Saleh AA, Greenspan SL. Systematic review and meta-analysis of the performance of clinical risk assessment instruments for screening for osteoporosis or low bone density. Osteoporos Int. 2015;26(5):1543--1554. \href{https://doi.org/10.1007/s00198-015-3025-1}{doi:10.1007/s00198-015-3025-1}
+\bibitem{nayak2015} Nayak S, Edwards DL, Saleh AA, Greenspan SL. Systematic review and meta-analysis of the performance of clinical risk assessment instruments for screening for osteoporosis or low bone density. Osteoporos Int 2015; 26: 1543--1554. DOI: \href{https://doi.org/10.1007/s00198-015-3025-1}{10.1007/s00198-015-3025-1}
 
-\bibitem{adler2003} Adler RA, Tran MT, Petkov VI. Performance of the Osteoporosis Self-assessment Screening Tool for osteoporosis in American men. Mayo Clin Proc. 2003;78(6):723--727. \href{https://doi.org/10.4065/78.6.723}{doi:10.4065/78.6.723}
+\bibitem{adler2003} Adler RA, Tran MT, Petkov VI. Performance of the Osteoporosis Self-assessment Screening Tool for osteoporosis in American men. Mayo Clin Proc 2003; 78: 723--727. DOI: \href{https://doi.org/10.4065/78.6.723}{10.4065/78.6.723}
 
-\bibitem{lynn2008} Lynn HS, Woo J, Leung PC, Barrett-Connor EL, Nevitt MC, Cauley JA, et al. An evaluation of osteoporosis screening tools for the osteoporotic fractures in men (MrOS) study. Osteoporos Int. 2008;19(7):1087--1092. \href{https://doi.org/10.1007/s00198-007-0553-3}{doi:10.1007/s00198-007-0553-3}
+\bibitem{lynn2008} Lynn HS, Woo J, Leung PC, Barrett-Connor EL, Nevitt MC, Cauley JA, et al. An evaluation of osteoporosis screening tools for the osteoporotic fractures in men (MrOS) study. Osteoporos Int 2008; 19: 1087--1092. DOI: \href{https://doi.org/10.1007/s00198-007-0553-3}{10.1007/s00198-007-0553-3}
 
-\bibitem{diem2017} Diem SJ, Peters KW, Gourlay ML, Schousboe JT, Taylor BC, Orwoll ES, et al. Screening for osteoporosis in older men: operating characteristics of proposed strategies for selecting men for BMD testing. J Gen Intern Med. 2017;32(11):1235--1241. \href{https://doi.org/10.1007/s11606-017-4153-4}{doi:10.1007/s11606-017-4153-4}
+\bibitem{diem2017} Diem SJ, Peters KW, Gourlay ML, Schousboe JT, Taylor BC, Orwoll ES, et al. Screening for osteoporosis in older men: operating characteristics of proposed strategies for selecting men for BMD testing. J Gen Intern Med 2017; 32: 1235--1241. DOI: \href{https://doi.org/10.1007/s11606-017-4153-4}{10.1007/s11606-017-4153-4}
 
-\bibitem{cass2006} Cass AR, Shepherd AJ, Carlson CA. Osteoporosis risk assessment and ethnicity: validation and comparison of 2 clinical risk stratification instruments. J Gen Intern Med. 2006;21(6):630--635. \href{https://doi.org/10.1111/j.1525-1497.2006.00459.x}{doi:10.1111/j.1525-1497.2006.00459.x}
+\bibitem{cass2006} Cass AR, Shepherd AJ, Carlson CA. Osteoporosis risk assessment and ethnicity: validation and comparison of 2 clinical risk stratification instruments. J Gen Intern Med 2006; 21: 630--635. DOI: \href{https://doi.org/10.1111/j.1525-1497.2006.00459.x}{10.1111/j.1525-1497.2006.00459.x}
 
-\bibitem{crandall2014} Crandall CJ, Larson J, Gourlay ML, Donaldson MG, LaCroix A, Cauley JA, et al. Osteoporosis screening in postmenopausal women 50 to 64 years old: comparison of US Preventive Services Task Force strategy and two traditional strategies in the Women's Health Initiative. J Bone Miner Res. 2014;29(7):1661--1666. \href{https://doi.org/10.1002/jbmr.2174}{doi:10.1002/jbmr.2174}
+\bibitem{crandall2014} Crandall CJ, Larson J, Gourlay ML, Donaldson MG, LaCroix A, Cauley JA, et al. Osteoporosis screening in postmenopausal women 50 to 64 years old: comparison of US Preventive Services Task Force strategy and two traditional strategies in the Women's Health Initiative. J Bone Miner Res 2014; 29: 1661--1666. DOI: \href{https://doi.org/10.1002/jbmr.2174}{10.1002/jbmr.2174}
 
-\bibitem{e2021} E E, Wang T, Yang L, et al. Machine learning can improve clinical detection of low BMD: the DXA-HIP study. J Clin Densitom. 2021;24(4):527--537. \href{https://doi.org/10.1016/j.jocd.2020.10.004}{doi:10.1016/j.jocd.2020.10.004}
+\bibitem{e2021} E E, Wang T, Yang L, et al. Machine learning can improve clinical detection of low BMD: the DXA-HIP study. J Clin Densitom 2021; 24: 527--537. DOI: \href{https://doi.org/10.1016/j.jocd.2020.10.004}{10.1016/j.jocd.2020.10.004}
 
-\bibitem{ouyang2021} Ou Yang WY, Lai CC, Tsou MT, Hwang LC. Development of machine learning models for prediction of osteoporosis from clinical health examination data. Int J Environ Res Public Health. 2021;18(14):7635. \href{https://doi.org/10.3390/ijerph18147635}{doi:10.3390/ijerph18147635}
+\bibitem{ouyang2021} Ou Yang WY, Lai CC, Tsou MT, Hwang LC. Development of machine learning models for prediction of osteoporosis from clinical health examination data. Int J Environ Res Public Health 2021; 18: 7635. DOI: \href{https://doi.org/10.3390/ijerph18147635}{10.3390/ijerph18147635}
 
-\bibitem{shim2020} Shim JG, Kim DW, Ryu KH, Cho EA, Ahn JH, Kim JI, et al. Application of machine learning approaches for osteoporosis risk prediction in postmenopausal women. Arch Osteoporos. 2020;15(1):169. \href{https://doi.org/10.1007/s11657-020-00802-8}{doi:10.1007/s11657-020-00802-8}
+\bibitem{shim2020} Shim JG, Kim DW, Ryu KH, Cho EA, Ahn JH, Kim JI, et al. Application of machine learning approaches for osteoporosis risk prediction in postmenopausal women. Arch Osteoporos 2020; 15: 169. DOI: \href{https://doi.org/10.1007/s11657-020-00802-8}{10.1007/s11657-020-00802-8}
 
-\bibitem{suh2023} Suh B, Yu H, Kim H, Lee S, Kong S, Kim JW, et al. Interpretable deep-learning approaches for osteoporosis risk screening and individualized feature analysis using large population-based data: model development and performance evaluation. J Med Internet Res. 2023;25:e40179. \href{https://doi.org/10.2196/40179}{doi:10.2196/40179}
+\bibitem{suh2023} Suh B, Yu H, Kim H, Lee S, Kong S, Kim JW, et al. Interpretable deep-learning approaches for osteoporosis risk screening and individualized feature analysis using large population-based data: model development and performance evaluation. J Med Internet Res 2023; 25: e40179. DOI: \href{https://doi.org/10.2196/40179}{10.2196/40179}
 
-\bibitem{tang2023} Tang Y, Liu J, Tian C, Feng Z, Zhang X, Xia Y, et al. A novel primary osteoporosis screening tool (POST) for adults aged 50 years and over. Endocrine. 2023;82(1):190--200. \href{https://doi.org/10.1007/s12020-023-03442-3}{doi:10.1007/s12020-023-03442-3}
+\bibitem{tang2023} Tang Y, Liu J, Tian C, Feng Z, Zhang X, Xia Y, et al. A novel primary osteoporosis screening tool (POST) for adults aged 50 years and over. Endocrine 2023; 82: 190--200. DOI: \href{https://doi.org/10.1007/s12020-023-03442-3}{10.1007/s12020-023-03442-3}
 
-\bibitem{zhangy2025} Zhang Y, Ma M, Tian C, Liu J, Duan Z, Huang X, et al. A machine-learning-based osteoporosis screening tool integrating the Shapley Additive exPlanation (SHAP) method: model development and validation study. Arch Osteoporos. 2025;20(1):134. \href{https://doi.org/10.1007/s11657-025-01602-8}{doi:10.1007/s11657-025-01602-8}
+\bibitem{zhangy2025} Zhang Y, Ma M, Tian C, Liu J, Duan Z, Huang X, et al. A machine-learning-based osteoporosis screening tool integrating the Shapley Additive exPlanation (SHAP) method: model development and validation study. Arch Osteoporos 2025; 20: 134. DOI: \href{https://doi.org/10.1007/s11657-025-01602-8}{10.1007/s11657-025-01602-8}
 
-\bibitem{zhang2025} Zhang D, Yang X, Wang F, Qiu C, Chai Y, Fang D. Comparative analysis of feature extraction methods and machine learning models for predicting osteoporosis prevalence. J Med Syst. 2025;49(1):72. \href{https://doi.org/10.1007/s10916-025-02203-1}{doi:10.1007/s10916-025-02203-1}
+\bibitem{zhang2025} Zhang D, Yang X, Wang F, Qiu C, Chai Y, Fang D. Comparative analysis of feature extraction methods and machine learning models for predicting osteoporosis prevalence. J Med Syst 2025; 49: 72. DOI: \href{https://doi.org/10.1007/s10916-025-02203-1}{10.1007/s10916-025-02203-1}
 
-\bibitem{christodoulou2019} Christodoulou E, Ma J, Collins GS, Steyerberg EW, Verbakel JY, Van Calster B. A systematic review shows no performance benefit of machine learning over logistic regression for clinical prediction models. J Clin Epidemiol. 2019;110:12--22. \href{https://doi.org/10.1016/j.jclinepi.2019.02.004}{doi:10.1016/j.jclinepi.2019.02.004}
+\bibitem{christodoulou2019} Christodoulou E, Ma J, Collins GS, Steyerberg EW, Verbakel JY, Van Calster B. A systematic review shows no performance benefit of machine learning over logistic regression for clinical prediction models. J Clin Epidemiol 2019; 110: 12--22. DOI: \href{https://doi.org/10.1016/j.jclinepi.2019.02.004}{10.1016/j.jclinepi.2019.02.004}
 
-\bibitem{vandengoorbergh2022} van den Goorbergh R, van Smeden M, Timmerman D, Van Calster B. The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression. J Am Med Inform Assoc. 2022;29(9):1525--1534. \href{https://doi.org/10.1093/jamia/ocac093}{doi:10.1093/jamia/ocac093}
+\bibitem{vandengoorbergh2022} van den Goorbergh R, van Smeden M, Timmerman D, Van Calster B. The harm of class imbalance corrections for risk prediction models: illustration and simulation using logistic regression. J Am Med Inform Assoc 2022; 29: 1525--1534. DOI: \href{https://doi.org/10.1093/jamia/ocac093}{10.1093/jamia/ocac093}
 
-\bibitem{collins2024} Collins GS, Moons KGM, Dhiman P, et al. TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods. BMJ. 2024;385:e078378. \href{https://doi.org/10.1136/bmj-2023-078378}{doi:10.1136/bmj-2023-078378}
+\bibitem{collins2024} Collins GS, Moons KGM, Dhiman P, et al. TRIPOD+AI statement: updated guidance for reporting clinical prediction models that use regression or machine learning methods. BMJ 2024; 385: e078378. DOI: \href{https://doi.org/10.1136/bmj-2023-078378}{10.1136/bmj-2023-078378}
 
 \bibitem{johnson2013} Johnson CL, Paulose-Ram R, Ogden CL, et al. National Health and Nutrition Examination Survey: analytic guidelines, 1999--2010. Vital Health Stat 2. 2013;(161):1--24.
 
 \bibitem{johnson2014} Johnson CL, Dohrmann SM, Burt VL, Mohadjer LK. National Health and Nutrition Examination Survey: sample design, 2011--2014. Vital Health Stat 2. 2014;(162):1--33.
 
-\bibitem{looker1998} Looker AC, Wahner HW, Dunn WL, et al. Updated data on proximal femur bone mineral levels of US adults. Osteoporos Int. 1998;8(5):468--490. \href{https://doi.org/10.1007/s001980050093}{doi:10.1007/s001980050093}
+\bibitem{looker1998} Looker AC, Wahner HW, Dunn WL, et al. Updated data on proximal femur bone mineral levels of US adults. Osteoporos Int 1998; 8: 468--490. DOI: \href{https://doi.org/10.1007/s001980050093}{10.1007/s001980050093}
 
-\bibitem{watts2013} Watts NB, Leslie WD, Foldes AJ, Miller PD. 2013 International Society for Clinical Densitometry Position Development Conference: Task Force on Normative Databases. J Clin Densitom. 2013;16(4):472--481. \href{https://doi.org/10.1016/j.jocd.2013.08.001}{doi:10.1016/j.jocd.2013.08.001}
+\bibitem{watts2013} Watts NB, Leslie WD, Foldes AJ, Miller PD. 2013 International Society for Clinical Densitometry Position Development Conference: Task Force on Normative Databases. J Clin Densitom 2013; 16: 472--481. DOI: \href{https://doi.org/10.1016/j.jocd.2013.08.001}{10.1016/j.jocd.2013.08.001}
 
-\bibitem{baim2008} Baim S, Binkley N, Bilezikian JP, Kendler DL, Hans DB, et al. Official Positions of the International Society for Clinical Densitometry and executive summary of the 2007 ISCD Position Development Conference. J Clin Densitom. 2008;11(1):75--91. \href{https://doi.org/10.1016/j.jocd.2007.12.007}{doi:10.1016/j.jocd.2007.12.007}
+\bibitem{baim2008} Baim S, Binkley N, Bilezikian JP, Kendler DL, Hans DB, et al. Official Positions of the International Society for Clinical Densitometry and executive summary of the 2007 ISCD Position Development Conference. J Clin Densitom 2008; 11: 75--91. DOI: \href{https://doi.org/10.1016/j.jocd.2007.12.007}{10.1016/j.jocd.2007.12.007}
 
-\bibitem{wright2014} Wright NC, Looker AC, Saag KG, Curtis JR, Delzell ES, Randall S, Dawson-Hughes B. The recent prevalence of osteoporosis and low bone mass in the United States based on bone mineral density at the femoral neck or lumbar spine. J Bone Miner Res. 2014;29(11):2520--2526. \href{https://doi.org/10.1002/jbmr.2269}{doi:10.1002/jbmr.2269}
+\bibitem{wright2014} Wright NC, Looker AC, Saag KG, Curtis JR, Delzell ES, Randall S, Dawson-Hughes B. The recent prevalence of osteoporosis and low bone mass in the United States based on bone mineral density at the femoral neck or lumbar spine. J Bone Miner Res 2014; 29: 2520--2526. DOI: \href{https://doi.org/10.1002/jbmr.2269}{10.1002/jbmr.2269}
 
-\bibitem{vanbuuren2011} van Buuren S, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. J Stat Softw. 2011;45(3):1--67. \href{https://doi.org/10.18637/jss.v045.i03}{doi:10.18637/jss.v045.i03}
+\bibitem{vanbuuren2011} van Buuren S, Groothuis-Oudshoorn K. mice: Multivariate imputation by chained equations in R. J Stat Softw 2011; 45: 1--67. DOI: \href{https://doi.org/10.18637/jss.v045.i03}{10.18637/jss.v045.i03}
 
-\bibitem{perperoglou2019} Perperoglou A, Sauerbrei W, Abrahamowicz M, Schmid M. A review of spline function procedures in R. BMC Med Res Methodol. 2019;19(1):46. \href{https://doi.org/10.1186/s12874-019-0666-3}{doi:10.1186/s12874-019-0666-3}
+\bibitem{perperoglou2019} Perperoglou A, Sauerbrei W, Abrahamowicz M, Schmid M. A review of spline function procedures in R. BMC Med Res Methodol 2019; 19: 46. DOI: \href{https://doi.org/10.1186/s12874-019-0666-3}{10.1186/s12874-019-0666-3}
 
 \bibitem{chen2016} Chen T, Guestrin C. XGBoost: a scalable tree boosting system. In: Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining; 2016:785--794. \href{https://doi.org/10.1145/2939672.2939785}{doi:10.1145/2939672.2939785}
 
@@ -485,55 +495,55 @@ In older US adults neither diagnosed with nor treated for osteoporosis, equally 
 
 \bibitem{prokhorenkova2018} Prokhorenkova L, Gusev G, Vorobev A, Dorogush AV, Gulin A. CatBoost: unbiased boosting with categorical features. In: Advances in Neural Information Processing Systems 31 (NeurIPS 2018). \url{https://proceedings.neurips.cc/paper_files/paper/2018/hash/14491b756b3a51daac41c24863285549-Abstract.html}
 
-\bibitem{chawla2002} Chawla NV, Bowyer KW, Hall LO, Kegelmeyer WP. SMOTE: synthetic minority over-sampling technique. J Artif Intell Res. 2002;16:321--357. \href{https://doi.org/10.1613/jair.953}{doi:10.1613/jair.953}
+\bibitem{chawla2002} Chawla NV, Bowyer KW, Hall LO, Kegelmeyer WP. SMOTE: synthetic minority over-sampling technique. J Artif Intell Res 2002; 16: 321--357. DOI: \href{https://doi.org/10.1613/jair.953}{10.1613/jair.953}
 
 \bibitem{akiba2019} Akiba T, Sano S, Yanase T, Ohta T, Koyama M. Optuna: a next-generation hyperparameter optimization framework. In: Proceedings of the 25th ACM SIGKDD International Conference on Knowledge Discovery \& Data Mining; 2019:2623--2631. \href{https://doi.org/10.1145/3292500.3330701}{doi:10.1145/3292500.3330701}
 
-\bibitem{kursa2010} Kursa MB, Rudnicki WR. Feature selection with the Boruta package. J Stat Softw. 2010;36(11):1--13. \href{https://doi.org/10.18637/jss.v036.i11}{doi:10.18637/jss.v036.i11}
+\bibitem{kursa2010} Kursa MB, Rudnicki WR. Feature selection with the Boruta package. J Stat Softw 2010; 36: 1--13. DOI: \href{https://doi.org/10.18637/jss.v036.i11}{10.18637/jss.v036.i11}
 
-\bibitem{vyas2020} Vyas DA, Eisenstein LG, Jones DS. Hidden in plain sight -- reconsidering the use of race correction in clinical algorithms. N Engl J Med. 2020;383(9):874--882. \href{https://doi.org/10.1056/NEJMms2004740}{doi:10.1056/NEJMms2004740}
+\bibitem{vyas2020} Vyas DA, Eisenstein LG, Jones DS. Hidden in plain sight -- reconsidering the use of race correction in clinical algorithms. N Engl J Med 2020; 383: 874--882. DOI: \href{https://doi.org/10.1056/NEJMms2004740}{10.1056/NEJMms2004740}
 
 \bibitem{platt2000} Platt JC. Probabilities for SV machines. In: Smola AJ, Bartlett P, Sch\"olkopf B, Schuurmans D, editors. Advances in Large-Margin Classifiers. Cambridge, MA: MIT Press; 2000:61--74. \href{https://doi.org/10.7551/mitpress/1113.003.0008}{doi:10.7551/mitpress/1113.003.0008}
 
-\bibitem{vancalster2019} Van Calster B, McLernon DJ, van Smeden M, Wynants L, Steyerberg EW. Calibration: the Achilles heel of predictive analytics. BMC Med. 2019;17(1):230. \href{https://doi.org/10.1186/s12916-019-1466-7}{doi:10.1186/s12916-019-1466-7}
+\bibitem{vancalster2019} Van Calster B, McLernon DJ, van Smeden M, Wynants L, Steyerberg EW. Calibration: the Achilles heel of predictive analytics. BMC Med 2019; 17: 230. DOI: \href{https://doi.org/10.1186/s12916-019-1466-7}{10.1186/s12916-019-1466-7}
 
-\bibitem{vickers2006} Vickers AJ, Elkin EB. Decision curve analysis: a novel method for evaluating prediction models. Med Decis Making. 2006;26(6):565--574. \href{https://doi.org/10.1177/0272989X06295361}{doi:10.1177/0272989X06295361}
+\bibitem{vickers2006} Vickers AJ, Elkin EB. Decision curve analysis: a novel method for evaluating prediction models. Med Decis Making 2006; 26: 565--574. DOI: \href{https://doi.org/10.1177/0272989X06295361}{10.1177/0272989X06295361}
 
-\bibitem{youden1950} Youden WJ. Index for rating diagnostic tests. Cancer. 1950;3(1):32--35.
+\bibitem{youden1950} Youden WJ. Index for rating diagnostic tests. Cancer 1950; 3: 32--35.
 
-\bibitem{dehond2022} de Hond AAH, Steyerberg EW, van Calster B. Interpreting area under the receiver operating characteristic curve. Lancet Digit Health. 2022;4(12):e853--e855. \href{https://doi.org/10.1016/S2589-7500(22)00188-1}{doi:10.1016/S2589-7500(22)00188-1}
+\bibitem{dehond2022} de Hond AAH, Steyerberg EW, van Calster B. Interpreting area under the receiver operating characteristic curve. Lancet Digit Health 2022; 4: e853--e855. DOI: \href{https://doi.org/10.1016/S2589-7500(22)00188-1}{10.1016/S2589-7500(22)00188-1}
 
-\bibitem{holm1979} Holm S. A simple sequentially rejective multiple test procedure. Scand J Stat. 1979;6(2):65--70.
+\bibitem{holm1979} Holm S. A simple sequentially rejective multiple test procedure. Scand J Stat 1979; 6: 65--70.
 
-\bibitem{steyerberg2016} Steyerberg EW, Harrell FE Jr. Prediction models need appropriate internal, internal-external, and external validation. J Clin Epidemiol. 2016;69:245--247. \href{https://doi.org/10.1016/j.jclinepi.2015.04.005}{doi:10.1016/j.jclinepi.2015.04.005}
+\bibitem{steyerberg2016} Steyerberg EW, Harrell FE Jr. Prediction models need appropriate internal, internal-external, and external validation. J Clin Epidemiol 2016; 69: 245--247. DOI: \href{https://doi.org/10.1016/j.jclinepi.2015.04.005}{10.1016/j.jclinepi.2015.04.005}
 
-\bibitem{dersimonian1986} DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177--188. \href{https://doi.org/10.1016/0197-2456(86)90046-2}{doi:10.1016/0197-2456(86)90046-2}
+\bibitem{dersimonian1986} DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials 1986; 7: 177--188. DOI: \href{https://doi.org/10.1016/0197-2456(86)90046-2}{10.1016/0197-2456(86)90046-2}
 
-\bibitem{inthout2014} IntHout J, Ioannidis JPA, Borm GF. The Hartung-Knapp-Sidik-Jonkman method for random effects meta-analysis is straightforward and considerably outperforms the standard DerSimonian-Laird method. BMC Med Res Methodol. 2014;14:25. \href{https://doi.org/10.1186/1471-2288-14-25}{doi:10.1186/1471-2288-14-25}
+\bibitem{inthout2014} IntHout J, Ioannidis JPA, Borm GF. The Hartung-Knapp-Sidik-Jonkman method for random effects meta-analysis is straightforward and considerably outperforms the standard DerSimonian-Laird method. BMC Med Res Methodol 2014; 14: 25. DOI: \href{https://doi.org/10.1186/1471-2288-14-25}{10.1186/1471-2288-14-25}
 
-\bibitem{hanley1982} Hanley JA, McNeil BJ. The meaning and use of the area under a receiver operating characteristic (ROC) curve. Radiology. 1982;143(1):29--36. \href{https://doi.org/10.1148/radiology.143.1.7063747}{doi:10.1148/radiology.143.1.7063747}
+\bibitem{hanley1982} Hanley JA, McNeil BJ. The meaning and use of the area under a receiver operating characteristic (ROC) curve. Radiology 1982; 143: 29--36. DOI: \href{https://doi.org/10.1148/radiology.143.1.7063747}{10.1148/radiology.143.1.7063747}
 
 \bibitem{chen2020} Chen TC, Clark J, Riddles MK, Mohadjer LK, Fakhouri THI. National Health and Nutrition Examination Survey, 2015--2018: sample design and estimation procedures. Vital Health Stat 2. 2020;(184):1--35.
 
-\bibitem{raowu1988} Rao JNK, Wu CFJ. Resampling inference with complex survey data. J Am Stat Assoc. 1988;83(401):231--241. \href{https://doi.org/10.1080/01621459.1988.10478591}{doi:10.1080/01621459.1988.10478591}
+\bibitem{raowu1988} Rao JNK, Wu CFJ. Resampling inference with complex survey data. J Am Stat Assoc 1988; 83: 231--241. DOI: \href{https://doi.org/10.1080/01621459.1988.10478591}{10.1080/01621459.1988.10478591}
 
 \bibitem{potter1990} Potter FJ. A study of procedures to identify and trim extreme sampling weights. In: Proceedings of the Survey Research Methods Section, American Statistical Association; 1990:225--230.
 
-\bibitem{lee2011} Lee BK, Lessler J, Stuart EA. Weight trimming and propensity score weighting. PLoS One. 2011;6(3):e18174. \href{https://doi.org/10.1371/journal.pone.0018174}{doi:10.1371/journal.pone.0018174}
+\bibitem{lee2011} Lee BK, Lessler J, Stuart EA. Weight trimming and propensity score weighting. PLoS One 2011; 6: e18174. DOI: \href{https://doi.org/10.1371/journal.pone.0018174}{10.1371/journal.pone.0018174}
 
 \bibitem{lundberg2017} Lundberg SM, Lee SI. A unified approach to interpreting model predictions. In: Advances in Neural Information Processing Systems 30 (NIPS 2017). \url{https://proceedings.neurips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html}
 
-\bibitem{pedregosa2011} Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: machine learning in Python. J Mach Learn Res. 2011;12(85):2825--2830. \url{https://jmlr.org/papers/v12/pedregosa11a.html}
+\bibitem{pedregosa2011} Pedregosa F, Varoquaux G, Gramfort A, et al. Scikit-learn: machine learning in Python. J Mach Learn Res 2011; 12: 2825--2830. \url{https://jmlr.org/papers/v12/pedregosa11a.html}
 
-\bibitem{kanis2008} Kanis JA, Johnell O, Oden A, Johansson H, McCloskey E. FRAX and the assessment of fracture probability in men and women from the UK. Osteoporos Int. 2008;19(4):385--397. \href{https://doi.org/10.1007/s00198-007-0543-5}{doi:10.1007/s00198-007-0543-5}
+\bibitem{kanis2008} Kanis JA, Johnell O, Oden A, Johansson H, McCloskey E. FRAX and the assessment of fracture probability in men and women from the UK. Osteoporos Int 2008; 19: 385--397. DOI: \href{https://doi.org/10.1007/s00198-007-0543-5}{10.1007/s00198-007-0543-5}
 
-\bibitem{zheng2025} Zheng HW, Bui AAT, Ensrud KE, et al. Identifying younger postmenopausal women with osteoporosis using USPSTF-recommended osteoporosis risk assessment tools. JAMA Netw Open. 2025;8(3):e250626. \href{https://doi.org/10.1001/jamanetworkopen.2025.0626}{doi:10.1001/jamanetworkopen.2025.0626}
+\bibitem{zheng2025} Zheng HW, Bui AAT, Ensrud KE, et al. Identifying younger postmenopausal women with osteoporosis using USPSTF-recommended osteoporosis risk assessment tools. JAMA Netw Open 2025; 8: e250626. DOI: \href{https://doi.org/10.1001/jamanetworkopen.2025.0626}{10.1001/jamanetworkopen.2025.0626}
 
-\bibitem{paulus2020} Paulus JK, Kent DM. Predictably unequal: understanding and addressing concerns that algorithmic clinical prediction may increase health disparities. NPJ Digit Med. 2020;3:99. \href{https://doi.org/10.1038/s41746-020-0304-9}{doi:10.1038/s41746-020-0304-9}
+\bibitem{paulus2020} Paulus JK, Kent DM. Predictably unequal: understanding and addressing concerns that algorithmic clinical prediction may increase health disparities. NPJ Digit Med 2020; 3: 99. DOI: \href{https://doi.org/10.1038/s41746-020-0304-9}{10.1038/s41746-020-0304-9}
 
-\bibitem{tibshirani1996} Tibshirani R. Regression shrinkage and selection via the lasso. J R Stat Soc Series B Stat Methodol. 1996;58(1):267--288. \href{https://doi.org/10.1111/j.2517-6161.1996.tb02080.x}{doi:10.1111/j.2517-6161.1996.tb02080.x}
+\bibitem{tibshirani1996} Tibshirani R. Regression shrinkage and selection via the lasso. J R Stat Soc Series B Stat Methodol 1996; 58: 267--288. DOI: \href{https://doi.org/10.1111/j.2517-6161.1996.tb02080.x}{10.1111/j.2517-6161.1996.tb02080.x}
 
-\bibitem{batista2004} Batista GEAPA, Prati RC, Monard MC. A study of the behavior of several methods for balancing machine learning training data. ACM SIGKDD Explor Newsl. 2004;6(1):20--29. \href{https://doi.org/10.1145/1007730.1007735}{doi:10.1145/1007730.1007735}
+\bibitem{batista2004} Batista GEAPA, Prati RC, Monard MC. A study of the behavior of several methods for balancing machine learning training data. ACM SIGKDD Explor Newsl 2004; 6: 20--29. DOI: \href{https://doi.org/10.1145/1007730.1007735}{10.1145/1007730.1007735}
 
 \end{thebibliography}
 
@@ -621,11 +631,11 @@ Item & Topic & Where reported \\
 14 & Fairness & Methods, Subgroups, clinical strata and sensitivity analyses \\
 15 & Model output and thresholds & Methods, Recalibration, thresholds and performance measures; Supplementary Table~\ref{tab:ops} \\
 16 & Differences between development and evaluation data & Results, Participants; Supplementary Table~\ref{tab:devval} \\
-17 & Ethics & Declarations \\
-18a--b & Funding; conflicts of interest & Declarations \\
-18c--d & Protocol; registration & Declarations (none) \\
-18e--f & Data and code availability & Declarations \\
-19 & Patient and public involvement & Declarations (none) \\
+17 & Ethics & Statements and Declarations \\
+18a--b & Funding; conflicts of interest & Statements and Declarations \\
+18c--d & Protocol; registration & Statements and Declarations (none) \\
+18e--f & Data and code availability & Statements and Declarations \\
+19 & Patient and public involvement & Statements and Declarations (none) \\
 20a & Participant flow & Figure~\ref{fig:flow} \\
 20b & Participant characteristics & Table~\ref{tab:baseline} \\
 20c & Comparison of development and evaluation data & Supplementary Table~\ref{tab:devval} \\
