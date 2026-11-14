@@ -13,6 +13,8 @@ Revision 9b (text only, no new analyses): corrected number slips (330-430 people
 Revision 9c (text only): second-review fixes - weighted case-count attribution, calibration CI, IECV-based ML claim in abstract, stale temporal-split wording, net-benefit units, imputation of binary predictors and ordinal spline term stated, cycle-to-cycle calibration discussed.
 
 Revision 10: ML families re-tuned inside each IECV development set (imbalance strategy re-selected, 40 Optuna trials per family per fold). Run `python src/rev10_ml_nested.py D` (and E, F, H, J; they can run in parallel, about 3 hours each on 8 cores with one thread per worker, e.g. OMP_NUM_THREADS=1) after rev8_analyses.py, then `python src/rev10_ml_nested.py pool`.
+
+Revision 10b (text only): third-review fixes - abstract and introduction wording on which families were compared, no-race IECV results reported, CI methods stated in captions, IECV-first framing (findings, comparison with previous studies, keywords, workflow figure), USPSTF 2025 recommendation cited, word count recounted.
 reported as one fold, P values descriptive); three-way interpretation of gains (relevant / superior
 but uncertain relevance / equivalent); clinical-only model (no blood tests, race or income) in IECV;
 cases per 1,000 with random tie-breaking, in guideline strata, in the population not routinely
