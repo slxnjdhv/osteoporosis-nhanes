@@ -7,6 +7,8 @@ version and the TRIPOD+AI checklist) and Figures S1-S4.
 Earlier versions are kept as `main_v1_before_fixes.tex` ... `main_v8_before_rev9.tex`.
 
 Revision 9 changes: pooled IECV difference from OST declared the primary estimand (2017-2018
+
+Revision 9b (text only, no new analyses): corrected number slips (330-430 people per extra case; sex-specific OST -0.1 to 1.0 cases), described the fixed penalty of the three-variable model, stated the tie rule of the 2017-2018 case table, added Supplementary Table iecvclin (clinical model by held-out cycle), explained one-stage vs meta-analysed pooled AUROCs, labelled the study exploratory, and qualified the claim that the clinical items are available in health records.
 reported as one fold, P values descriptive); three-way interpretation of gains (relevant / superior
 but uncertain relevance / equivalent); clinical-only model (no blood tests, race or income) in IECV;
 cases per 1,000 with random tie-breaking, in guideline strata, in the population not routinely
