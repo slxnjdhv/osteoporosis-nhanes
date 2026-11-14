@@ -80,7 +80,7 @@ $^{*}$Corresponding author: Dr Sulaxan Jadhav, Symbiosis School of Economics, Sy
 
 Osteoporosis causes fragility fractures that lead to disability, loss of independence and excess mortality, yet effective treatment substantially lowers fracture risk once the disease is recognised \cite{compston2019}. Among US adults aged 50 years and older, about one in eight has osteoporosis at the femoral neck or lumbar spine \cite{sarafrazi2021}. Diagnosis relies on dual-energy X-ray absorptiometry (DXA), with osteoporosis defined as a T-score of $-2.5$ or lower \cite{kanis1994}. DXA capacity is limited, and guidelines target screening mainly at women aged 65 and older and at younger postmenopausal women at increased risk, leaving men and many younger women under-assessed \cite{uspstf2025}.
 
-Simple risk tools can prioritise who most needs DXA. The Osteoporosis Self-Assessment Tool (OST), $0.2\times(\text{weight}-\text{age})$, uses only age and weight \cite{geusens2002,koh2001}; the Osteoporosis Risk Assessment Instrument (ORAI) and the Simple Calculated Osteoporosis Risk Estimation (SCORE) add a few questionnaire items \cite{cadarette2000,lydick1998}. In women these tools reach areas under the receiver operating characteristic curve (AUROC) of about 0.70--0.80 \cite{geusens2002,rud2007,gourlay2008}, systematic reviews have found that further risk factors rarely improve on age and weight \cite{rubin2013,nayak2015}, and OST also performs reasonably in men \cite{adler2003,lynn2008,diem2017}, although its accuracy varies with ethnicity \cite{cass2006}. FRAX without BMD identifies low bone density less well than OST \cite{crandall2014,diem2017}, so it is not the natural comparator for a tool that selects people for DXA.
+Simple risk tools can prioritise who most needs DXA. The Osteoporosis Self-Assessment Tool (OST), $0.2\times(\text{weight}-\text{age})$, uses only age and weight \cite{geusens2002,koh2001}; the Osteoporosis Risk Assessment Instrument (ORAI) and the Simple Calculated Osteoporosis Risk Estimation (SCORE) add a few questionnaire items \cite{cadarette2000,lydick1998}. In women these tools reach areas under the receiver operating characteristic curve (AUROC) of about 0.70--0.80 \cite{geusens2002,rud2007,gourlay2008}, systematic reviews have found that further risk factors rarely improve on age and weight \cite{rubin2013,nayak2015}, and OST also performs reasonably in men \cite{adler2003,lynn2008,diem2017}, although its accuracy varies with ethnicity \cite{cass2006}. FRAX calculated without bone mineral density (BMD) identifies low bone density less well than OST \cite{crandall2014,diem2017}, so it is not the natural comparator for a tool that selects people for DXA.
 
 Machine learning (ML) models built on population surveys have reported AUROCs of 0.69--0.74 in the Korea National Health and Nutrition Examination Survey (KNHANES), against 0.73 for logistic regression \cite{shim2020,suh2023}, and of 0.81--0.85 in the US National Health and Nutrition Examination Survey (NHANES) \cite{tang2023,zhangy2025,zhang2025}, where one gradient-boosting model was compared with OST (0.83 vs 0.78) \cite{zhangy2025}. These studies used random splits from the same years, comparators that were absent or tuned less carefully than the ML models, accuracy as the main metric, and cohorts that included people already diagnosed or treated, with little attention to calibration or to men. Across clinical prediction tasks, ML has rarely outperformed logistic regression \cite{christodoulou2019}, and class-imbalance corrections can distort calibration \cite{vandengoorbergh2022}.
 
@@ -92,7 +92,7 @@ We aimed not to propose another model but to estimate how much ML and additional
 \subsection{Data source and study population}
 We used publicly available, de-identified data from NHANES, a cross-sectional survey of the non-institutionalised US civilian population with a complex, multistage probability design \cite{johnson2013,johnson2014}. We pooled the five 2-year cycles with femoral DXA: 2005--2006, 2007--2008, 2009--2010, 2013--2014 and 2017--2018, merging demographic, body-measure, DXA, laboratory, questionnaire and prescription-medication files on the respondent sequence number.
 
-Of 50,463 participants, 14,166 were aged 50 years or older and 10,981 of these had a valid femoral neck bone mineral density (BMD) measurement. Because the intended use is case-finding before DXA, we excluded 1,324 participants who reported a physician diagnosis of osteoporosis (1,155) or current use of an osteoporosis medication without such a diagnosis (169); 282 of them met the outcome definition. The final cohort comprised 9,657 participants (Figure~\ref{fig:flow}). No participant missed more than 50\% of predictors. Participants without DXA are compared with the cohort in Supplementary Table~\ref{tab:excl}, and the medication list is given in the Supplementary Methods.
+Of 50,463 participants, 14,166 were aged 50 years or older and 10,981 of these had a valid femoral neck BMD measurement. Because the intended use is case-finding before DXA, we excluded 1,324 participants who reported a physician diagnosis of osteoporosis (1,155) or current use of an osteoporosis medication without such a diagnosis (169); 282 of them met the outcome definition. The final cohort comprised 9,657 participants (Figure~\ref{fig:flow}). No participant missed more than 50\% of predictors. Participants without DXA are compared with the cohort in Supplementary Table~\ref{tab:excl}, and the medication list is given in the Supplementary Methods.
 
 \subsection{Outcome}
 The outcome was osteoporosis at the hip, a T-score of $-2.5$ or lower at the femoral neck or total hip \cite{kanis1994}, calculated from the NHANES III reference values for non-Hispanic white women aged 20--29 years \cite{looker1998} for both sexes, as recommended by the International Society for Clinical Densitometry \cite{watts2013}. DXA was performed by trained technologists following the NHANES protocol, independently of the predictors.
@@ -375,7 +375,7 @@ The conclusions did not change in any sensitivity analysis (Supplementary Tables
 In 9,657 older US adults neither diagnosed with nor treated for osteoporosis, penalised logistic regression with 35 predictors identified hip osteoporosis with a pooled AUROC of 0.881 across five held-out cycles. It exceeded OST by 0.024 and an age--weight--sex model by 0.019, consistently but by an amount of uncertain clinical relevance: about 3 additional cases per 1,000 people screened at a fixed DXA capacity, about 60\% of which came from clinical items alone. Equally tuned ML did not outperform logistic regression.
 
 \subsection{Comparison with previous studies}
-Our results agree with systematic reviews concluding that simple tools based on age and weight perform as well as more complex instruments \cite{rubin2013,nayak2015}. OST's pooled AUROC of 0.856 lies at the upper end of the range reported in women \cite{geusens2002,rud2007,gourlay2008} and is consistent with its performance in men \cite{adler2003,lynn2008,diem2017}; SCORE performed like OST and ORAI worse, as before \cite{gourlay2008}.
+Our results agree with systematic reviews concluding that simple tools based on age and weight perform as well as more complex instruments \cite{rubin2013,nayak2015}. OST's pooled AUROC of 0.856 in both sexes lies at the upper end of the ranges reported in women \cite{geusens2002,rud2007,gourlay2008} and in men \cite{adler2003,lynn2008,diem2017} separately; SCORE performed like OST and ORAI worse, as before \cite{gourlay2008}.
 
 As in KNHANES \cite{shim2020}, ML did not outperform logistic regression. NHANES-based models have reported similar AUROCs (0.81--0.85) \cite{tang2023,zhangy2025,zhang2025}, but with random splits and, mostly, no simple comparator; the larger gain over OST reported for one gradient-boosting model (0.83 vs 0.78) \cite{zhangy2025} may reflect differences in outcome, cohort and tuning. In our re-implementation of one published pipeline \cite{zhang2025}, every combination had an accuracy of 0.954--0.957, close to the 95.5\% obtained by predicting no osteoporosis for everyone, including SVMs with AUROC as low as 0.653 (Supplementary Table~\ref{tab:reimpl}): accuracy cannot rank models for an uncommon condition.
 
@@ -588,7 +588,7 @@ Item & Topic & Where reported \\
 3c & Known health inequalities & Introduction, paragraph 3; Methods, Subgroups, clinical strata and sensitivity analyses \\
 4 & Objectives & Introduction, final paragraph \\
 5a & Data sources & Methods, Data source and study population \\
-5b & Dates of data collection & Methods, Data source and study population; Development and validation sets \\
+5b & Dates of data collection & Methods, Data source and study population; Development set and missing data \\
 6a & Setting & Methods, Data source and study population \\
 6b & Eligibility criteria & Methods, Data source and study population; Figure~\ref{fig:flow} \\
 6c & Treatments received & Methods, Data source and study population (diagnosed or treated excluded) \\
@@ -599,10 +599,10 @@ Item & Topic & Where reported \\
 9a & Choice of predictors & Methods, Predictors and data preparation \\
 9b & Predictor definitions and measurement & Methods, Predictors and data preparation; Supplementary Methods \\
 9c & Predictor assessors and blinding & Standard NHANES interview, examination and laboratory protocols \\
-10 & Sample size & Methods, Development and validation sets \\
-11 & Missing data & Methods, Missing data; Table~\ref{tab:miss} \\
-12a & Use of data in development and evaluation & Methods, Development and validation sets \\
-12b & Handling of predictors & Methods, Missing data; Models and tuning; Supplementary Methods \\
+10 & Sample size & Methods, Development set and missing data \\
+11 & Missing data & Methods, Development set and missing data; Table~\ref{tab:miss} \\
+12a & Use of data in development and evaluation & Methods, Development set and missing data \\
+12b & Handling of predictors & Methods, Development set and missing data; Models and tuning; Supplementary Methods \\
 12c & Model type, building and tuning & Methods, Models and tuning; Supplementary Tables~\ref{tab:tuned} and~\ref{tab:hyper} \\
 12d & Heterogeneity across clusters & Methods, Internal--external validation; Survey weighting and non-response; Subgroups, clinical strata and sensitivity analyses \\
 12e & Performance measures & Methods, Recalibration, thresholds and performance measures \\
@@ -620,14 +620,14 @@ Item & Topic & Where reported \\
 20a & Participant flow & Figure~\ref{fig:flow} \\
 20b & Participant characteristics & Table~\ref{tab:baseline} \\
 20c & Comparison of development and evaluation data & Supplementary Table~\ref{tab:devval} \\
-21 & Numbers of participants and outcome events & Figure~\ref{fig:flow}; Methods, Development and validation sets; Table~\ref{tab:fair} \\
+21 & Numbers of participants and outcome events & Figure~\ref{fig:flow}; Methods, Development set and missing data; Table~\ref{tab:fair} \\
 22 & Full model specification & Supplementary Table~\ref{tab:coef}; code repository \\
 23a & Performance with confidence intervals, including subgroups & Tables~\ref{tab:perf}, \ref{tab:cases} and~\ref{tab:strata}; Figures~\ref{fig:roc}--\ref{fig:dca}; Supplementary Table~\ref{tab:fair} \\
 23b & Heterogeneity across clusters & Table~\ref{tab:iecv}; Supplementary Tables~\ref{tab:sens}, \ref{tab:scanner}, \ref{tab:wtrim} and~\ref{tab:ostsexspec} \\
 24 & Model updating results & Results, Calibration and clinical utility \\
 25 & Interpretation & Discussion \\
 26 & Limitations & Discussion, Strengths and limitations; Supplementary Table~\ref{tab:versions} \\
-27a & Handling of poor-quality or missing input data & Methods, Missing data (imputation model in code) \\
+27a & Handling of poor-quality or missing input data & Methods, Development set and missing data (imputation model in code) \\
 27b & User interaction and required expertise & Discussion, Calibration, thresholds and implementation \\
 27c & Future research and applicability & Discussion, Calibration, thresholds and implementation; Strengths and limitations \\
 \end{longtable}
