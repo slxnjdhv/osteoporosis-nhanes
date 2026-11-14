@@ -17,6 +17,8 @@ Revision 10: ML families re-tuned inside each IECV development set (imbalance st
 Revision 10b (text only): third-review fixes - abstract and introduction wording on which families were compared, no-race IECV results reported, CI methods stated in captions, IECV-first framing (findings, comparison with previous studies, keywords, workflow figure), USPSTF 2025 recommendation cited, word count recounted.
 
 Revision 10c (length): main text cut from about 4,460 to 3,040 words; supplement reduced from 30 tables and 4 figures to 22 and 2. Removed from the supplement (all still produced by the code in outputs/tables): default-configuration comparison, 2017-2018 case counts by tie order, re-implementation feature lists, SHAP importance table, dependence and waterfall plots, short-form equation and short-form-by-sex tables, OST by sex, and survey-weighted performance (key numbers kept in the text). No analysis changed.
+
+Revision 10e (submission readiness, J Med Syst guidelines): Statements and Declarations heading with consent statements, AI-use disclosure in Methods (Software), model card (Supplementary Table modelcard), USPSTF 2025 citation checked against Crossref (first page and DOI only).
 reported as one fold, P values descriptive); three-way interpretation of gains (relevant / superior
 but uncertain relevance / equivalent); clinical-only model (no blood tests, race or income) in IECV;
 cases per 1,000 with random tie-breaking, in guideline strata, in the population not routinely
